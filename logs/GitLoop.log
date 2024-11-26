@@ -495,3 +495,7 @@
 [2024-11-26 17:57:08][INFO] Started async operation: Initial Sync Git Loop
 [2024-11-26 17:57:08][INFO] Started async operation: Initial Sync Masterlogs
 [2024-11-26 17:57:09][INFO] Started async operation: Initial Sync ANF
+[2024-11-26 17:59:50][INFO] Started monitoring selected repositories
+[2024-11-26 17:59:50][INFO] Started async operation: Initial Sync Git Loop
+[2024-11-26 17:59:50][INFO] Started async operation: Initial Sync Masterlogs
+[2024-11-26 17:59:50][INFO] Started async operation: Initial Sync ANF

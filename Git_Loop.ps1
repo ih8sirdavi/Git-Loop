@@ -466,22 +466,25 @@ function Start-AsyncOperation {
         function Log-Message {
             param(
                 [string]$message,
-                [string]$repository = "",
-                [string]$type = "INFO"
+                [string]$type = "INFO",
+                [string]$repository = ""
             )
-            Write-Host "[$type][$repository] $message"
+            
+            $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+            $logEntry = "[$timestamp][$type]"
+            if ($repository) { $logEntry += "[$repository]" }
+            $logEntry += " $message"
+            
+            $logPath = Join-Path $PSScriptRoot "logs\GitLoop.log"
+            Add-Content -Path $logPath -Value $logEntry
         }
-        
-        function Log-Error {
+
+        function Update-RepositoryStatus {
             param(
-                [string]$message,
-                [string]$repository = "",
-                [System.Management.Automation.ErrorRecord]$errorRecord = $null
+                [string]$repoName,
+                [string]$status  # "Syncing", "Error", "Success", "Pending"
             )
-            Write-Host "[ERROR][$repository] $message"
-            if ($errorRecord) {
-                Write-Host "Exception: $($errorRecord.Exception.Message)"
-            }
+            Log-Message "Updated status for $repoName to: $status" -type "INFO" -repository $repoName
         }
         
         function Retry-Operation {
@@ -759,68 +762,61 @@ function Sync-GitRepository {
     
     $repo = $config.Repositories | Where-Object { $_.Name -eq $repoName }
     if (-not $repo) {
-        Log-Error "Repository not found in configuration" -repository $repoName
-        return
+        throw "Repository $repoName not found in configuration"
     }
-    
+
+    Write-Verbose "Starting sync for $repoName"
+    Set-Location $repo.Path
+
+    # Verify Git repository
+    if (-not (Test-Path (Join-Path $repo.Path ".git"))) {
+        throw "Directory is not a Git repository: $($repo.Path)"
+    }
+
+    # Verify remote URL
+    $currentRemote = git remote get-url origin 2>$null
+    if ($currentRemote -ne $repo.RemoteUrl) {
+        Write-Verbose "Updating remote URL for $repoName"
+        git remote set-url origin $repo.RemoteUrl
+    }
+
+    # Verify current branch
+    $currentBranch = git rev-parse --abbrev-ref HEAD 2>$null
+    if ($currentBranch -ne $repo.Branch) {
+        Write-Verbose "Switching to branch $($repo.Branch)"
+        git checkout $repo.Branch
+    }
+
     try {
-        Update-RepositoryStatus -repoName $repoName -status "Syncing"
-        Set-Location $repo.Path
+        # Stage changes
+        Write-Verbose "Staging changes"
+        git add -A
         
-        # Fetch latest changes
-        Retry-Operation -Operation {
-            git fetch origin $repo.Branch
-            if ($LASTEXITCODE -ne 0) {
-                throw "Failed to fetch from remote"
-            }
-        } -OperationName "git fetch" -Repository $repoName
-        
-        # Check for local changes
+        # Commit if there are changes
         $status = git status --porcelain
         if ($status) {
-            # Stage all changes
-            Retry-Operation -Operation {
-                git add -A
-                if ($LASTEXITCODE -ne 0) {
-                    throw "Failed to stage changes"
-                }
-            } -OperationName "git add" -Repository $repoName
-            
-            # Commit changes
-            Retry-Operation -Operation {
-                git commit -m "Auto-commit: Local changes"
-                if ($LASTEXITCODE -ne 0) {
-                    throw "Failed to commit changes"
-                }
-            } -OperationName "git commit" -Repository $repoName
+            Write-Verbose "Committing changes"
+            git commit -m "Auto-commit: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+            Log-Message "Committed local changes" -repository $repoName
         }
-        
-        # Pull changes (with rebase to handle conflicts)
-        Retry-Operation -Operation {
-            git pull --rebase origin $repo.Branch
-            if ($LASTEXITCODE -ne 0) {
-                throw "Failed to pull changes"
-            }
-        } -OperationName "git pull" -Repository $repoName
-        
-        # Push our changes if any
-        Retry-Operation -Operation {
-            git push origin $repo.Branch
-            if ($LASTEXITCODE -ne 0) {
-                throw "Failed to push changes"
-            }
-        } -OperationName "git push" -Repository $repoName
-        
-        Log-Message "Successfully synced repository" -repository $repoName
+
+        # Pull changes
+        Write-Verbose "Pulling changes"
+        git pull --no-rebase origin $repo.Branch
+        Log-Message "Fetched changes from remote" -repository $repoName
+
+        # Push changes
+        Write-Verbose "Pushing changes"
+        git push origin $repo.Branch
+        Log-Message "Pushed changes to remote" -repository $repoName
+
+        Log-Message "Repository synchronized successfully" -repository $repoName
         Update-RepositoryStatus -repoName $repoName -status "Success"
     }
     catch {
-        Log-Error "Error syncing repository: $_" -repository $repoName -errorRecord $_
+        Log-Message "Git operation failed: $_" -type "ERROR" -repository $repoName
         Update-RepositoryStatus -repoName $repoName -status "Error"
         throw
-    }
-    finally {
-        Set-Location $PSScriptRoot
     }
 }
 
