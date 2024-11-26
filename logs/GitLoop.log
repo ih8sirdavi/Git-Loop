@@ -1,0 +1,488 @@
+[2024-11-26 06:40:09][INFO] Started monitoring selected repositories
+[2024-11-26 06:40:09][INFO][Masterlogs]  Committed local changes
+[2024-11-26 06:40:10][INFO][Masterlogs]  Fetched changes from remote
+[2024-11-26 06:40:11][INFO][Masterlogs]  Pushed changes to remote
+[2024-11-26 06:40:11][INFO][ANF]  Committed local changes
+[2024-11-26 06:40:12][INFO][ANF]  Fetched changes from remote
+[2024-11-26 06:40:13][INFO][ANF]  Pushed changes to remote
+[2024-11-26 06:40:39][INFO][Masterlogs]  Committed local changes
+[2024-11-26 06:40:40][INFO][Masterlogs]  Fetched changes from remote
+[2024-11-26 06:40:41][INFO][Masterlogs]  Pushed changes to remote
+[2024-11-26 06:40:42][INFO][ANF]  Committed local changes
+[2024-11-26 06:40:42][INFO][ANF]  Fetched changes from remote
+[2024-11-26 06:40:43][INFO][ANF]  Pushed changes to remote
+[2024-11-26 06:41:07][INFO] Stopped monitoring
+[2024-11-26 06:43:55][INFO] Started monitoring selected repositories
+[2024-11-26 06:44:04][INFO] Stopped monitoring
+[2024-11-26 06:44:56][INFO] Started monitoring selected repositories
+[2024-11-26 06:47:17][INFO] Started monitoring selected repositories
+[2024-11-26 06:47:17][INFO] Started async operation: Initial Sync Masterlogs
+[2024-11-26 06:47:17][INFO] Started async operation: Initial Sync ANF
+[2024-11-26 06:47:17][INFO] Operation completed: Initial Sync Masterlogs
+[2024-11-26 06:47:40][INFO] Stopped monitoring
+[2024-11-26 06:48:34][INFO] Started monitoring selected repositories
+[2024-11-26 06:48:34][INFO] Started async operation: Initial Sync Masterlogs
+[2024-11-26 06:48:34][INFO] Started async operation: Initial Sync ANF
+[2024-11-26 06:49:04][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 06:49:04][INFO] Operation completed: Initial Sync Masterlogs
+[2024-11-26 06:49:04][INFO] Operation completed: Initial Sync ANF
+[2024-11-26 06:49:04][INFO] Started async operation: Sync ANF
+[2024-11-26 06:49:04][INFO] Operation completed: Sync Masterlogs
+[2024-11-26 06:49:10][INFO] Stopped monitoring
+[2024-11-26 06:50:00][INFO] Started monitoring selected repositories
+[2024-11-26 06:50:00][INFO] Started async operation: Initial Sync Masterlogs
+[2024-11-26 06:50:01][INFO] Started async operation: Initial Sync ANF
+[2024-11-26 06:50:30][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 06:50:30][INFO] Operation completed: Initial Sync Masterlogs
+[2024-11-26 06:50:30][INFO] Operation completed: Initial Sync ANF
+[2024-11-26 06:50:30][INFO] Started async operation: Sync ANF
+[2024-11-26 06:50:30][INFO] Operation completed: Sync Masterlogs
+[2024-11-26 06:51:28][INFO] Started monitoring selected repositories
+[2024-11-26 06:51:28][INFO] Started async operation: Initial Sync Masterlogs
+[2024-11-26 06:51:28][INFO] Started async operation: Initial Sync ANF
+[2024-11-26 06:51:58][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 06:51:58][INFO] Operation completed: Initial Sync Masterlogs
+[2024-11-26 06:51:58][INFO] Operation completed: Initial Sync ANF
+[2024-11-26 06:51:58][INFO] Started async operation: Sync ANF
+[2024-11-26 06:52:09][INFO] Stopped monitoring repositories
+[2024-11-26 06:57:59][INFO] Started monitoring selected repositories
+[2024-11-26 06:57:59][INFO] Started async operation: Initial Sync Masterlogs
+[2024-11-26 06:57:59][INFO] Started async operation: Initial Sync ANF
+[2024-11-26 06:58:29][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 06:58:29][INFO] Operation completed: Initial Sync Masterlogs
+[2024-11-26 06:58:29][INFO] Operation completed: Initial Sync ANF
+[2024-11-26 06:58:29][INFO] Started async operation: Sync ANF
+[2024-11-26 06:59:40][INFO] Started monitoring selected repositories
+[2024-11-26 06:59:40][INFO] Started async operation: Initial Sync Masterlogs
+[2024-11-26 07:00:10][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 07:00:10][INFO] Operation completed: Initial Sync Masterlogs
+[2024-11-26 07:00:40][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 07:01:10][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 07:01:29][INFO] Stopped monitoring repositories
+[2024-11-26 07:13:30][INFO] Started monitoring selected repositories
+[2024-11-26 07:13:31][INFO] Started async operation: Initial Sync Masterlogs
+[2024-11-26 07:13:31][INFO] Operation completed: Sync Masterlogs
+[2024-11-26 07:13:31][INFO] Started async operation: Initial Sync ANF
+[2024-11-26 07:14:01][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 07:14:01][INFO] Operation completed: Initial Sync Masterlogs
+[2024-11-26 07:14:01][INFO] Operation completed: Initial Sync ANF
+[2024-11-26 07:14:01][INFO] Started async operation: Sync ANF
+[2024-11-26 07:14:16][INFO] Stopped monitoring repositories
+[2024-11-26 14:48:20][INFO] Started monitoring selected repositories
+[2024-11-26 14:48:21][INFO] Started async operation: Initial Sync Masterlogs
+[2024-11-26 14:48:21][INFO] Started async operation: Initial Sync ANF
+[2024-11-26 14:48:38][INFO] Stopped monitoring repositories
+[2024-11-26 14:49:32][INFO] Started monitoring selected repositories
+[2024-11-26 14:49:32][INFO] Started async operation: Initial Sync Masterlogs
+[2024-11-26 14:49:32][INFO] Started async operation: Initial Sync ANF
+[2024-11-26 14:49:52][INFO] Stopped monitoring repositories
+[2024-11-26 15:10:32][ERROR][Masterlogs]  Remote URL mismatch. Expected: git@github.com:ih8sirdavi/Masterlogs.git
+[2024-11-26 15:10:33][INFO][ANF]  Repository health check passed
+[2024-11-26 15:10:33][INFO] Started monitoring selected repositories
+[2024-11-26 15:10:33][INFO] Started async operation: Initial Sync Masterlogs
+[2024-11-26 15:10:33][INFO] Started async operation: Initial Sync ANF
+[2024-11-26 15:11:03][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 15:11:03][ERROR][Masterlogs]  Operation failed: From github.com:ih8sirdavi/Projects
+[2024-11-26 15:11:03][ERROR][ANF]  Operation failed: From github.com:ih8sirdavi/ANF
+[2024-11-26 15:11:03][INFO] Started async operation: Sync ANF
+[2024-11-26 15:11:33][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 15:11:33][ERROR][ANF]  Operation failed: From github.com:ih8sirdavi/ANF
+[2024-11-26 15:11:33][INFO] Started async operation: Sync ANF
+[2024-11-26 15:12:03][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 15:12:03][ERROR][ANF]  Operation failed: From github.com:ih8sirdavi/ANF
+[2024-11-26 15:12:03][INFO] Started async operation: Sync ANF
+[2024-11-26 15:12:33][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 15:12:33][ERROR][ANF]  Operation failed: From github.com:ih8sirdavi/ANF
+[2024-11-26 15:12:33][INFO] Started async operation: Sync ANF
+[2024-11-26 15:13:03][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 15:13:03][ERROR][ANF]  Operation failed: From github.com:ih8sirdavi/ANF
+[2024-11-26 15:13:03][INFO] Started async operation: Sync ANF
+[2024-11-26 15:13:33][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 15:13:33][ERROR][ANF]  Operation failed: From github.com:ih8sirdavi/ANF
+[2024-11-26 15:13:33][INFO] Started async operation: Sync ANF
+[2024-11-26 15:14:03][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 15:14:03][ERROR][ANF]  Operation failed: From github.com:ih8sirdavi/ANF
+[2024-11-26 15:14:03][INFO] Started async operation: Sync ANF
+[2024-11-26 15:14:33][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 15:14:33][ERROR][ANF]  Operation failed: From github.com:ih8sirdavi/ANF
+[2024-11-26 15:14:33][INFO] Started async operation: Sync ANF
+[2024-11-26 15:15:03][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 15:15:03][ERROR][ANF]  Operation failed: From github.com:ih8sirdavi/ANF
+[2024-11-26 15:15:03][INFO] Started async operation: Sync ANF
+[2024-11-26 15:15:33][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 15:15:33][ERROR][ANF]  Operation failed: From github.com:ih8sirdavi/ANF
+[2024-11-26 15:15:33][INFO] Started async operation: Sync ANF
+[2024-11-26 15:15:45][INFO] Stopped monitoring repositories
+[2024-11-26 15:23:56][ERROR][Masterlogs]  Remote URL mismatch. Expected: git@github.com:ih8sirdavi/Masterlogs.git
+[2024-11-26 15:23:57][INFO][ANF]  Repository health check passed
+[2024-11-26 15:23:57][INFO] Started monitoring selected repositories
+[2024-11-26 15:23:57][INFO] Started async operation: Initial Sync Masterlogs
+[2024-11-26 15:23:57][INFO] Started async operation: Initial Sync ANF
+[2024-11-26 15:24:19][INFO] Stopped monitoring repositories
+[2024-11-26 15:26:08][INFO][Masterlogs]  Repository health check passed
+[2024-11-26 15:26:09][INFO][ANF]  Repository health check passed
+[2024-11-26 15:26:09][INFO] Started monitoring selected repositories
+[2024-11-26 15:26:09][INFO] Started async operation: Initial Sync Masterlogs
+[2024-11-26 15:26:10][INFO] Started async operation: Initial Sync ANF
+[2024-11-26 15:26:48][INFO][Masterlogs]  Repository health check passed
+[2024-11-26 15:26:49][INFO][ANF]  Repository health check passed
+[2024-11-26 15:26:49][INFO] Started monitoring selected repositories
+[2024-11-26 15:26:49][INFO] Started async operation: Initial Sync Masterlogs
+[2024-11-26 15:26:49][INFO] Started async operation: Initial Sync ANF
+[2024-11-26 15:27:19][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 15:27:19][ERROR][Masterlogs]  Operation failed: From github.com:ih8sirdavi/Masterlogs
+[2024-11-26 15:27:19][ERROR][ANF]  Operation failed: From github.com:ih8sirdavi/ANF
+[2024-11-26 15:27:19][INFO] Started async operation: Sync ANF
+[2024-11-26 15:27:47][INFO] Application shutting down
+[2024-11-26 15:29:25][INFO] Application shutting down
+[2024-11-26 15:30:29][INFO][Masterlogs]  SSH authentication successful
+[2024-11-26 15:30:29][INFO][ANF]  SSH authentication successful
+[2024-11-26 15:30:29][INFO] Started monitoring selected repositories
+[2024-11-26 15:30:29][INFO][Masterlogs]  Starting initial sync for Masterlogs
+[2024-11-26 15:30:30][INFO] Started async operation: Initial Sync Masterlogs
+[2024-11-26 15:30:30][INFO][ANF]  Starting initial sync for ANF
+[2024-11-26 15:30:30][INFO] Started async operation: Initial Sync ANF
+[2024-11-26 15:30:57][INFO] Switched to Dark theme
+[2024-11-26 15:30:58][INFO] Switched to Light theme
+[2024-11-26 15:30:59][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 15:30:59][ERROR][Masterlogs]  Operation failed: The term 'Update-RepositoryStatus' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2024-11-26 15:30:59][ERROR][ANF]  Operation failed: The term 'Update-RepositoryStatus' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2024-11-26 15:31:00][INFO] Started async operation: Sync ANF
+[2024-11-26 15:31:04][INFO] Stopped monitoring repositories
+[2024-11-26 15:31:23][INFO] Application shutting down
+[2024-11-26 15:38:40][INFO] Application shutting down
+[2024-11-26 15:40:31][INFO] Stopped monitoring repositories
+[2024-11-26 15:42:07][INFO] Stopped monitoring repositories
+[2024-11-26 15:54:20][INFO] Application shutting down
+[2024-11-26 15:58:17][INFO][Masterlogs]  SSH authentication successful
+[2024-11-26 15:58:17][INFO][ANF]  SSH authentication successful
+[2024-11-26 15:58:17][INFO] Started monitoring selected repositories
+[2024-11-26 15:58:17][INFO][Masterlogs]  Starting initial sync for Masterlogs
+[2024-11-26 15:58:18][INFO] Started async operation: Initial Sync Masterlogs
+[2024-11-26 15:58:18][INFO][ANF]  Starting initial sync for ANF
+[2024-11-26 15:58:18][INFO] Started async operation: Initial Sync ANF
+[2024-11-26 15:58:32][INFO][Masterlogs]  Performing final sync for Masterlogs
+[2024-11-26 15:58:33][INFO][Masterlogs]  Repository configuration validated and fixed
+[2024-11-26 15:58:33][INFO][Masterlogs]  Fetching updates from remote...
+[2024-11-26 15:58:33][INFO][Masterlogs]  Repository is up to date
+[2024-11-26 15:58:33][INFO][Masterlogs]  Repository synchronized successfully
+[2024-11-26 15:58:33][INFO][Masterlogs]  Final sync completed for Masterlogs
+[2024-11-26 15:58:33][INFO][ANF]  Performing final sync for ANF
+[2024-11-26 15:58:34][INFO][ANF]  Repository configuration validated and fixed
+[2024-11-26 15:58:34][INFO][ANF]  Fetching updates from remote...
+[2024-11-26 15:58:35][INFO][ANF]  Repository is up to date
+[2024-11-26 15:58:35][INFO][ANF]  Repository synchronized successfully
+[2024-11-26 15:58:35][INFO][ANF]  Final sync completed for ANF
+[2024-11-26 15:58:35][INFO] Stopped monitoring repositories
+[2024-11-26 15:58:36][INFO][Masterlogs]  SSH authentication successful
+[2024-11-26 15:58:36][INFO][ANF]  SSH authentication successful
+[2024-11-26 15:58:36][INFO] Started monitoring selected repositories
+[2024-11-26 15:58:36][INFO][Masterlogs]  Starting initial sync for Masterlogs
+[2024-11-26 15:58:36][INFO] Started async operation: Initial Sync Masterlogs
+[2024-11-26 15:58:36][ERROR][ANF]  Operation failed: The term 'Update-RepositoryStatus' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2024-11-26 15:58:37][INFO][ANF]  Starting initial sync for ANF
+[2024-11-26 15:58:37][INFO] Started async operation: Initial Sync ANF
+[2024-11-26 15:58:37][INFO] Paused repository monitoring
+[2024-11-26 15:58:39][INFO] Resuming repository monitoring
+[2024-11-26 15:58:46][INFO][Masterlogs]  Performing final sync for Masterlogs
+[2024-11-26 15:58:46][INFO][Masterlogs]  Repository configuration validated and fixed
+[2024-11-26 15:58:46][INFO][Masterlogs]  Fetching updates from remote...
+[2024-11-26 15:58:47][INFO][Masterlogs]  Repository is up to date
+[2024-11-26 15:58:47][INFO][Masterlogs]  Repository synchronized successfully
+[2024-11-26 15:58:47][INFO][Masterlogs]  Final sync completed for Masterlogs
+[2024-11-26 15:58:47][INFO][ANF]  Performing final sync for ANF
+[2024-11-26 15:58:48][INFO][ANF]  Repository configuration validated and fixed
+[2024-11-26 15:58:48][INFO][ANF]  Fetching updates from remote...
+[2024-11-26 15:58:49][INFO][ANF]  Repository is up to date
+[2024-11-26 15:58:49][INFO][ANF]  Repository synchronized successfully
+[2024-11-26 15:58:49][INFO][ANF]  Final sync completed for ANF
+[2024-11-26 15:58:49][INFO] Stopped monitoring repositories
+[2024-11-26 15:58:51][INFO][Masterlogs]  SSH authentication successful
+[2024-11-26 15:58:52][INFO][ANF]  SSH authentication successful
+[2024-11-26 15:58:52][INFO] Started monitoring selected repositories
+[2024-11-26 15:58:52][INFO][Masterlogs]  Starting initial sync for Masterlogs
+[2024-11-26 15:58:52][INFO] Started async operation: Initial Sync Masterlogs
+[2024-11-26 15:58:52][ERROR][ANF]  Operation failed: The term 'Update-RepositoryStatus' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2024-11-26 15:58:52][INFO][ANF]  Starting initial sync for ANF
+[2024-11-26 15:58:52][INFO] Started async operation: Initial Sync ANF
+[2024-11-26 16:06:28][INFO] Switched to Dark theme
+[2024-11-26 16:06:35][INFO] Switched to Light theme
+[2024-11-26 16:06:40][INFO][Masterlogs]  SSH authentication successful
+[2024-11-26 16:06:40][INFO][ANF]  SSH authentication successful
+[2024-11-26 16:06:40][INFO] Started monitoring selected repositories
+[2024-11-26 16:06:40][INFO][Masterlogs]  Starting initial sync for Masterlogs
+[2024-11-26 16:06:41][INFO] Started async operation: Initial Sync Masterlogs
+[2024-11-26 16:06:41][INFO][ANF]  Starting initial sync for ANF
+[2024-11-26 16:06:41][INFO] Started async operation: Initial Sync ANF
+[2024-11-26 16:06:50][INFO] Switched to Dark theme
+[2024-11-26 16:07:11][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 16:07:11][ERROR][Masterlogs]  Operation failed: The term 'Update-RepositoryStatus' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2024-11-26 16:07:11][ERROR][ANF]  Operation failed: The term 'Update-RepositoryStatus' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2024-11-26 16:07:11][INFO] Started async operation: Sync ANF
+[2024-11-26 16:07:28][INFO][Masterlogs]  Performing final sync for Masterlogs
+[2024-11-26 16:07:29][INFO][Masterlogs]  Repository configuration validated and fixed
+[2024-11-26 16:07:29][INFO][Masterlogs]  Fetching updates from remote...
+[2024-11-26 16:07:30][INFO][Masterlogs]  Repository is up to date
+[2024-11-26 16:07:30][INFO][Masterlogs]  Repository synchronized successfully
+[2024-11-26 16:07:30][INFO][Masterlogs]  Final sync completed for Masterlogs
+[2024-11-26 16:07:30][INFO][ANF]  Performing final sync for ANF
+[2024-11-26 16:07:31][INFO][ANF]  Repository configuration validated and fixed
+[2024-11-26 16:07:31][INFO][ANF]  Fetching updates from remote...
+[2024-11-26 16:07:32][INFO][ANF]  Repository is up to date
+[2024-11-26 16:07:32][INFO][ANF]  Repository synchronized successfully
+[2024-11-26 16:07:32][INFO][ANF]  Final sync completed for ANF
+[2024-11-26 16:07:32][INFO] Stopped monitoring repositories
+[2024-11-26 16:09:16][INFO] Switched to Dark theme
+[2024-11-26 16:09:17][INFO] Switched to Light theme
+[2024-11-26 16:09:18][INFO] Switched to Dark theme
+[2024-11-26 16:09:28][INFO][Masterlogs]  SSH authentication successful
+[2024-11-26 16:09:28][INFO][ANF]  SSH authentication successful
+[2024-11-26 16:09:28][INFO] Started monitoring selected repositories
+[2024-11-26 16:09:28][INFO][Masterlogs]  Starting initial sync for Masterlogs
+[2024-11-26 16:09:28][INFO] Started async operation: Initial Sync Masterlogs
+[2024-11-26 16:09:28][ERROR] Error updating repository status: The property 'Text' cannot be found on this object. Verify that the property exists and can be set.
+[2024-11-26 16:09:28][INFO][ANF]  Starting initial sync for ANF
+[2024-11-26 16:09:29][INFO] Started async operation: Initial Sync ANF
+[2024-11-26 16:09:29][ERROR] Error updating repository status: The property 'Text' cannot be found on this object. Verify that the property exists and can be set.
+[2024-11-26 16:11:08][INFO][Masterlogs]  SSH authentication successful
+[2024-11-26 16:11:08][INFO][ANF]  SSH authentication successful
+[2024-11-26 16:11:08][INFO] Started monitoring selected repositories
+[2024-11-26 16:11:08][INFO][Masterlogs]  Starting initial sync for Masterlogs
+[2024-11-26 16:11:08][INFO] Started async operation: Initial Sync Masterlogs
+[2024-11-26 16:11:08][INFO][ANF]  Starting initial sync for ANF
+[2024-11-26 16:11:08][INFO] Started async operation: Initial Sync ANF
+[2024-11-26 16:11:17][INFO] Switched to Dark theme
+[2024-11-26 16:11:19][INFO] Switched to Light theme
+[2024-11-26 16:11:19][INFO] Switched to Dark theme
+[2024-11-26 16:11:35][INFO] Switched to Light theme
+[2024-11-26 16:11:39][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 16:11:39][ERROR][Masterlogs]  Operation failed: The term 'Update-RepositoryStatus' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2024-11-26 16:11:39][ERROR][ANF]  Operation failed: The term 'Update-RepositoryStatus' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2024-11-26 16:11:39][INFO] Started async operation: Sync ANF
+[2024-11-26 16:12:09][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 16:12:09][ERROR][ANF]  Operation failed: The term 'Update-RepositoryStatus' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2024-11-26 16:12:09][INFO] Started async operation: Sync ANF
+[2024-11-26 16:14:51][INFO] Switched to Dark theme
+[2024-11-26 16:14:55][INFO] Switched to Light theme
+[2024-11-26 16:15:05][INFO] Switched to Dark theme
+[2024-11-26 16:15:08][INFO][Masterlogs]  SSH authentication successful
+[2024-11-26 16:15:08][INFO][ANF]  SSH authentication successful
+[2024-11-26 16:15:08][INFO] Started monitoring selected repositories
+[2024-11-26 16:15:08][INFO][Masterlogs]  Starting initial sync for Masterlogs
+[2024-11-26 16:15:09][INFO] Started async operation: Initial Sync Masterlogs
+[2024-11-26 16:15:09][INFO][Masterlogs]  Updated status for Masterlogs to: Syncing
+[2024-11-26 16:15:09][INFO][ANF]  Starting initial sync for ANF
+[2024-11-26 16:15:09][INFO] Started async operation: Initial Sync ANF
+[2024-11-26 16:15:09][INFO][ANF]  Updated status for ANF to: Syncing
+[2024-11-26 16:15:39][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 16:15:39][INFO][Masterlogs]  Updated status for Masterlogs to: Syncing
+[2024-11-26 16:15:39][ERROR][Masterlogs]  Operation failed: The term 'Update-RepositoryStatus' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2024-11-26 16:15:39][INFO][Masterlogs]  Updated status for Masterlogs to: Error
+[2024-11-26 16:15:39][INFO][Masterlogs]  Updated status for Masterlogs to: Error
+[2024-11-26 16:15:39][ERROR][ANF]  Operation failed: The term 'Update-RepositoryStatus' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2024-11-26 16:15:39][INFO][ANF]  Updated status for ANF to: Error
+[2024-11-26 16:15:39][INFO][ANF]  Updated status for ANF to: Error
+[2024-11-26 16:15:39][INFO] Started async operation: Sync ANF
+[2024-11-26 16:15:39][INFO][ANF]  Updated status for ANF to: Syncing
+[2024-11-26 16:25:12][INFO] Switched to Dark theme
+[2024-11-26 16:25:12][INFO] Switched to Light theme
+[2024-11-26 16:25:25][INFO][Masterlogs]  SSH authentication successful
+[2024-11-26 16:25:26][INFO][ANF]  SSH authentication successful
+[2024-11-26 16:25:26][INFO] Started monitoring selected repositories
+[2024-11-26 16:25:26][INFO][Masterlogs]  Starting initial sync for Masterlogs
+[2024-11-26 16:25:26][INFO] Started async operation: Initial Sync Masterlogs
+[2024-11-26 16:25:26][INFO][Masterlogs]  Updated status for Masterlogs to: Syncing
+[2024-11-26 16:25:26][INFO][ANF]  Starting initial sync for ANF
+[2024-11-26 16:25:26][INFO] Started async operation: Initial Sync ANF
+[2024-11-26 16:25:26][INFO][ANF]  Updated status for ANF to: Syncing
+[2024-11-26 16:25:56][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 16:25:56][INFO][Masterlogs]  Updated status for Masterlogs to: Syncing
+[2024-11-26 16:25:56][ERROR][Masterlogs]  Operation failed: The term 'Update-RepositoryStatus' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2024-11-26 16:25:56][INFO][Masterlogs]  Updated status for Masterlogs to: Error
+[2024-11-26 16:25:56][INFO][Masterlogs]  Updated status for Masterlogs to: Error
+[2024-11-26 16:25:56][ERROR][ANF]  Operation failed: The term 'Update-RepositoryStatus' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+[2024-11-26 16:25:56][INFO][ANF]  Updated status for ANF to: Error
+[2024-11-26 16:25:56][INFO][ANF]  Updated status for ANF to: Error
+[2024-11-26 16:25:56][INFO] Started async operation: Sync ANF
+[2024-11-26 16:25:56][INFO][ANF]  Updated status for ANF to: Syncing
+[2024-11-26 16:26:08][INFO][Masterlogs]  Performing final sync for Masterlogs
+[2024-11-26 16:26:09][INFO][Masterlogs]  Repository configuration validated and fixed
+[2024-11-26 16:26:09][INFO][Masterlogs]  Fetching updates from remote...
+[2024-11-26 16:26:10][INFO][Masterlogs]  Repository is up to date
+[2024-11-26 16:26:10][INFO][Masterlogs]  Repository synchronized successfully
+[2024-11-26 16:26:10][INFO][Masterlogs]  Updated status for Masterlogs to: Success
+[2024-11-26 16:26:10][INFO][Masterlogs]  Final sync completed for Masterlogs
+[2024-11-26 16:26:10][INFO][ANF]  Performing final sync for ANF
+[2024-11-26 16:26:10][INFO][ANF]  Repository configuration validated and fixed
+[2024-11-26 16:26:10][INFO][ANF]  Fetching updates from remote...
+[2024-11-26 16:26:11][INFO][ANF]  Repository is up to date
+[2024-11-26 16:26:11][INFO][ANF]  Repository synchronized successfully
+[2024-11-26 16:26:11][INFO][ANF]  Updated status for ANF to: Success
+[2024-11-26 16:26:11][INFO][ANF]  Final sync completed for ANF
+[2024-11-26 16:26:11][INFO] Stopped monitoring repositories
+[2024-11-26 16:26:11][INFO][Masterlogs]  Updated status for Masterlogs to: Idle
+[2024-11-26 16:26:11][INFO][ANF]  Updated status for ANF to: Idle
+[2024-11-26 16:29:14][INFO] Started monitoring selected repositories
+[2024-11-26 16:29:14][INFO] Started async operation: Initial Sync Masterlogs
+[2024-11-26 16:29:14][INFO] Started async operation: Initial Sync ANF
+[2024-11-26 16:29:44][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 16:29:44][ERROR][Masterlogs]  Operation failed: From github.com:ih8sirdavi/Masterlogs
+[2024-11-26 16:29:44][ERROR][ANF]  Operation failed: From github.com:ih8sirdavi/ANF
+[2024-11-26 16:29:44][INFO] Started async operation: Sync ANF
+[2024-11-26 16:30:14][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 16:30:14][ERROR][ANF]  Operation failed: From github.com:ih8sirdavi/ANF
+[2024-11-26 16:30:14][INFO] Started async operation: Sync ANF
+[2024-11-26 16:30:37][INFO] Stopped monitoring repositories
+[2024-11-26 16:34:56][INFO] Started monitoring selected repositories (Interactive Mode: False)
+[2024-11-26 16:34:56][INFO] Started async operation: Initial Sync Masterlogs
+[2024-11-26 16:34:56][INFO] Started async operation: Initial Sync ANF
+[2024-11-26 16:35:06][INFO] Stopped monitoring repositories
+[2024-11-26 16:37:08][INFO] Started monitoring selected repositories (Interactive Mode: False)
+[2024-11-26 16:37:09][INFO] Started async operation: Initial Sync Masterlogs
+[2024-11-26 16:37:09][INFO] Started async operation: Initial Sync ANF
+[2024-11-26 16:37:39][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 16:37:39][ERROR][Masterlogs]  Operation failed: Everything up-to-date
+[2024-11-26 16:37:39][ERROR][ANF]  Operation failed: Cannot bind argument to parameter 'Path' because it is an empty string.
+[2024-11-26 16:37:39][INFO] Started async operation: Sync ANF
+[2024-11-26 16:38:00][INFO] Stopped monitoring repositories
+[2024-11-26 16:44:51][INFO][] Started monitoring selected repositories
+[2024-11-26 16:44:52][INFO] Started async operation: Initial Sync Masterlogs
+[2024-11-26 16:44:52][INFO] Started async operation: Initial Sync ANF
+[2024-11-26 16:45:05][INFO][] Stopped monitoring repositories
+[2024-11-26 16:49:58][INFO][] Starting monitoring for repositories: Masterlogs, ANF
+[2024-11-26 16:49:59][INFO][Masterlogs] Starting initial sync for Masterlogs
+[2024-11-26 16:49:59][INFO] Started async operation: Initial Sync Masterlogs
+[2024-11-26 16:49:59][INFO][ANF] Starting initial sync for ANF
+[2024-11-26 16:49:59][INFO] Started async operation: Initial Sync ANF
+[2024-11-26 16:51:38][INFO][] Starting monitoring for repositories: Masterlogs, ANF
+[2024-11-26 16:51:38][INFO][Masterlogs] Starting initial sync for Masterlogs
+[2024-11-26 16:51:38][INFO] Started async operation: Initial Sync Masterlogs
+[2024-11-26 16:51:38][ERROR][ANF]  Operation failed
+[2024-11-26 16:51:38][INFO][ANF] Starting initial sync for ANF
+[2024-11-26 16:51:38][INFO] Started async operation: Initial Sync ANF
+[2024-11-26 16:53:06][INFO][] Starting monitoring for repositories: Masterlogs
+[2024-11-26 16:53:06][INFO][Masterlogs] Starting initial sync for Masterlogs
+[2024-11-26 16:53:06][INFO][Masterlogs] Starting operation: Initial Sync Masterlogs
+[2024-11-26 16:53:06][INFO][Masterlogs] Updating status for Masterlogs to: Syncing
+[2024-11-26 16:53:11][WARNING][Masterlogs] Repository has issues: Repository has uncommitted changes
+[2024-11-26 16:53:11][INFO][Masterlogs] Starting sync operation
+[2024-11-26 16:53:11][INFO][Masterlogs] Fetching changes from remote
+[2024-11-26 16:53:12][INFO][Masterlogs] Successfully fetched changes
+[2024-11-26 16:53:12][INFO][Masterlogs] Found local changes
+[2024-11-26 16:53:12][INFO][Masterlogs] Staging changes
+[2024-11-26 16:53:12][INFO][Masterlogs] Changes staged successfully
+[2024-11-26 16:53:12][INFO][Masterlogs] Committing changes:
+ master_log_progress.md | 149 ++++++++++++++++++++++++++-----------------------  1 file changed, 79 insertions(+), 70 deletions(-)
+[2024-11-26 16:53:12][SUCCESS][Masterlogs] Changes committed successfully
+[2024-11-26 16:53:12][INFO][Masterlogs] Pulling changes from remote
+[2024-11-26 16:53:13][INFO][Masterlogs] Successfully pulled changes
+[2024-11-26 16:53:13][INFO][Masterlogs] Pushing changes to remote
+[2024-11-26 16:53:14][SUCCESS][Masterlogs] Successfully pushed changes
+[2024-11-26 16:53:23][INFO][] Stopping repository monitoring
+[2024-11-26 16:53:23][INFO][ANF] Performing final sync for ANF
+[2024-11-26 16:53:23][INFO][ANF] Starting operation: Final Sync ANF
+[2024-11-26 16:53:23][INFO][ANF] Updating status for ANF to: Syncing
+[2024-11-26 16:53:23][ERROR][Masterlogs] Error in operation Initial Sync Masterlogs : You cannot call a method on a null-valued expression.
+[2024-11-26 16:53:23][INFO][Masterlogs] Updating status for Masterlogs to: Error
+[2024-11-26 16:53:23][INFO][] Monitoring stopped for repositories: ANF
+[2024-11-26 16:53:26][WARNING][ANF] Repository has issues: Repository has uncommitted changes
+[2024-11-26 16:53:26][INFO][ANF] Starting sync operation
+[2024-11-26 16:53:26][INFO][ANF] Fetching changes from remote
+[2024-11-26 17:08:31][INFO][] Starting monitoring for repositories: Masterlogs
+[2024-11-26 17:08:31][INFO][Masterlogs] Starting initial sync for Masterlogs
+[2024-11-26 17:08:31][INFO][Masterlogs] Starting operation: Initial Sync Masterlogs
+[2024-11-26 17:08:31][INFO][Masterlogs] Updating status for Masterlogs to: Syncing
+[2024-11-26 17:09:58][INFO][] Starting monitoring for repositories: ANF
+[2024-11-26 17:09:58][INFO][ANF] Starting initial sync for ANF
+[2024-11-26 17:09:58][INFO][ANF] Starting operation: Initial Sync ANF
+[2024-11-26 17:09:58][INFO][ANF] Updating status for ANF to: Syncing
+[2024-11-26 17:11:41][INFO] Started monitoring selected repositories
+[2024-11-26 17:11:41][INFO] Started async operation: Initial Sync Masterlogs
+[2024-11-26 17:11:41][INFO] Started async operation: Initial Sync ANF
+[2024-11-26 17:12:11][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 17:12:11][ERROR][Masterlogs]  Operation failed: From github.com:ih8sirdavi/Masterlogs
+[2024-11-26 17:12:11][ERROR][ANF]  Operation failed: From github.com:ih8sirdavi/ANF
+[2024-11-26 17:12:11][INFO] Started async operation: Sync ANF
+[2024-11-26 17:12:41][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 17:12:41][ERROR][ANF]  Operation failed: From github.com:ih8sirdavi/ANF
+[2024-11-26 17:12:41][INFO] Started async operation: Sync ANF
+[2024-11-26 17:13:11][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 17:13:11][ERROR][ANF]  Operation failed: From github.com:ih8sirdavi/ANF
+[2024-11-26 17:13:11][INFO] Started async operation: Sync ANF
+[2024-11-26 17:13:41][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 17:13:41][ERROR][ANF]  Operation failed: From github.com:ih8sirdavi/ANF
+[2024-11-26 17:13:41][INFO] Started async operation: Sync ANF
+[2024-11-26 17:14:11][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 17:14:11][ERROR][ANF]  Operation failed: From github.com:ih8sirdavi/ANF
+[2024-11-26 17:14:11][INFO] Started async operation: Sync ANF
+[2024-11-26 17:14:41][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 17:14:41][ERROR][ANF]  Operation failed: From github.com:ih8sirdavi/ANF
+[2024-11-26 17:14:41][INFO] Started async operation: Sync ANF
+[2024-11-26 17:15:11][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 17:15:11][ERROR][ANF]  Operation failed: From github.com:ih8sirdavi/ANF
+[2024-11-26 17:15:11][INFO] Started async operation: Sync ANF
+[2024-11-26 17:15:41][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 17:15:41][ERROR][ANF]  Operation failed: From github.com:ih8sirdavi/ANF
+[2024-11-26 17:15:41][INFO] Started async operation: Sync ANF
+[2024-11-26 17:16:11][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 17:16:11][ERROR][ANF]  Operation failed: From github.com:ih8sirdavi/ANF
+[2024-11-26 17:16:11][INFO] Started async operation: Sync ANF
+[2024-11-26 17:16:41][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 17:16:41][ERROR][ANF]  Operation failed: From github.com:ih8sirdavi/ANF
+[2024-11-26 17:16:41][INFO] Started async operation: Sync ANF
+[2024-11-26 17:17:11][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 17:17:11][ERROR][ANF]  Operation failed: From github.com:ih8sirdavi/ANF
+[2024-11-26 17:17:11][INFO] Started async operation: Sync ANF
+[2024-11-26 17:17:41][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 17:17:41][ERROR][ANF]  Operation failed: From github.com:ih8sirdavi/ANF
+[2024-11-26 17:17:41][INFO] Started async operation: Sync ANF
+[2024-11-26 17:18:11][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 17:18:11][ERROR][ANF]  Operation failed: From github.com:ih8sirdavi/ANF
+[2024-11-26 17:18:11][INFO] Started async operation: Sync ANF
+[2024-11-26 17:18:41][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 17:18:41][ERROR][ANF]  Operation failed: From github.com:ih8sirdavi/ANF
+[2024-11-26 17:18:41][INFO] Started async operation: Sync ANF
+[2024-11-26 17:19:11][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 17:19:11][ERROR][ANF]  Operation failed: From github.com:ih8sirdavi/ANF
+[2024-11-26 17:19:11][INFO] Started async operation: Sync ANF
+[2024-11-26 17:19:41][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 17:19:41][ERROR][ANF]  Operation failed: From github.com:ih8sirdavi/ANF
+[2024-11-26 17:19:41][INFO] Started async operation: Sync ANF
+[2024-11-26 17:20:11][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 17:20:11][ERROR][ANF]  Operation failed: From github.com:ih8sirdavi/ANF
+[2024-11-26 17:20:11][INFO] Started async operation: Sync ANF
+[2024-11-26 17:20:41][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 17:20:41][ERROR][ANF]  Operation failed: From github.com:ih8sirdavi/ANF
+[2024-11-26 17:20:41][INFO] Started async operation: Sync ANF
+[2024-11-26 17:21:11][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 17:21:11][ERROR][ANF]  Operation failed: From github.com:ih8sirdavi/ANF
+[2024-11-26 17:21:11][INFO] Started async operation: Sync ANF
+[2024-11-26 17:21:41][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 17:21:41][ERROR][ANF]  Operation failed: From github.com:ih8sirdavi/ANF
+[2024-11-26 17:21:41][INFO] Started async operation: Sync ANF
+[2024-11-26 17:22:11][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 17:22:11][ERROR][ANF]  Operation failed: From github.com:ih8sirdavi/ANF
+[2024-11-26 17:22:11][INFO] Started async operation: Sync ANF
+[2024-11-26 17:22:41][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 17:22:41][ERROR][ANF]  Operation failed: From github.com:ih8sirdavi/ANF
+[2024-11-26 17:22:41][INFO] Started async operation: Sync ANF
+[2024-11-26 17:23:11][INFO] Started async operation: Sync Masterlogs
+[2024-11-26 17:23:11][ERROR][ANF]  Operation failed: From github.com:ih8sirdavi/ANF
+[2024-11-26 17:23:11][INFO] Started async operation: Sync ANF
+[2024-11-26 17:23:26][INFO] Stopped monitoring repositories
+[2024-11-26 17:32:56][INFO] Started monitoring selected repositories
+[2024-11-26 17:32:56][INFO] Started async operation: Initial Sync Masterlogs
+[2024-11-26 17:32:57][INFO] Started async operation: Initial Sync ANF
+[2024-11-26 17:33:13][INFO] Stopped monitoring repositories
+[2024-11-26 17:41:39][INFO] Started monitoring selected repositories
+[2024-11-26 17:41:39][INFO] Started async operation: Initial Sync Git-Loop
+[2024-11-26 17:42:09][INFO] Started async operation: Sync Git-Loop
+[2024-11-26 17:42:09][ERROR][Git-Loop]  Operation failed
+[2024-11-26 17:42:36][INFO] Stopped monitoring repositories
+[2024-11-26 17:44:36][INFO] Started monitoring selected repositories
+[2024-11-26 17:44:36][INFO] Started async operation: Initial Sync Git-Loop
+[2024-11-26 17:46:14][INFO] Started monitoring selected repositories
+[2024-11-26 17:46:14][INFO] Started async operation: Initial Sync Git-Loop
+[2024-11-26 17:46:17][INFO] Stopped monitoring repositories
+[2024-11-26 17:50:45][INFO] Started monitoring selected repositories
+[2024-11-26 17:50:45][INFO] Started async operation: Initial Sync Git-Loop
