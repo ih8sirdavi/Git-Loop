@@ -3,11 +3,158 @@ Add-Type -AssemblyName System.Drawing
 
 # Configuration
 $configPath = Join-Path $PSScriptRoot "config"
-Write-Verbose "Loading configuration from: $configPath"
+$configExamplePath = Join-Path $PSScriptRoot "config.example"
+Write-Verbose "Looking for configuration at: $configPath"
+
+function Initialize-Configuration {
+    Write-Verbose "Starting configuration initialization..."
+    if (-not (Test-Path $configExamplePath)) {
+        Write-Verbose "Configuration example not found at: $configExamplePath"
+        throw "Configuration example file not found at: $configExamplePath. Please reinstall Git Loop."
+    }
+    Write-Verbose "Found configuration example at: $configExamplePath"
+
+    Write-Host "`nWelcome to Git Loop!`n" -ForegroundColor Cyan
+    Write-Host "No configuration file found. Let's set up your initial configuration." -ForegroundColor Yellow
+    
+    # Check SSH key configuration
+    Write-Verbose "Checking SSH key configuration..."
+    $sshConfigured = Test-GitSshKey
+    if (-not $sshConfigured) {
+        Write-Host "`nGitHub SSH key not configured!" -ForegroundColor Yellow
+        Write-Host "Please follow these steps to set up SSH authentication:" -ForegroundColor White
+        Write-Host "1. Generate an SSH key: ssh-keygen -t ed25519 -C 'your_email@example.com'" -ForegroundColor White
+        Write-Host "2. Add the key to ssh-agent: ssh-add ~/.ssh/id_ed25519" -ForegroundColor White
+        Write-Host "3. Add the public key to GitHub: https://github.com/settings/keys" -ForegroundColor White
+        Write-Host "4. Test the connection: ssh -T git@github.com" -ForegroundColor White
+        Write-Host "`nPress any key after setting up SSH (or Esc to skip)..." -ForegroundColor Yellow
+        
+        $key = $Host.UI.RawUI.ReadKey("IncludeKeyDown")
+        if ($key.VirtualKeyCode -eq 27) { # Esc key
+            Write-Host "`nSkipping SSH setup..." -ForegroundColor Yellow
+        } else {
+            # Test again after setup
+            $sshConfigured = Test-GitSshKey
+            if (-not $sshConfigured) {
+                Write-Host "`nSSH key still not configured correctly. Please verify your setup." -ForegroundColor Red
+                Write-Host "You can continue, but Git operations may fail." -ForegroundColor Yellow
+            } else {
+                Write-Host "`nSSH key configured successfully!" -ForegroundColor Green
+            }
+        }
+    } else {
+        Write-Verbose "SSH key already configured"
+    }
+    
+    # Get GitHub username
+    Write-Verbose "Checking for global Git username..."
+    $defaultUsername = git config --global user.name
+    $username = $null
+    $maxRetries = 3
+    $retryCount = 0
+    
+    # First check if we have a default username
+    if ($defaultUsername) {
+        Write-Verbose "Found global Git username: $defaultUsername"
+        Write-Host "`nFound Git username: $defaultUsername" -ForegroundColor Green
+        Write-Verbose "Using global Git username"
+        $username = $defaultUsername
+    } else {
+        Write-Verbose "No global Git username found"
+        Write-Host "`nNo global Git username found." -ForegroundColor Yellow
+    }
+    
+    # Only enter the retry loop if we don't have a username yet
+    if (-not $username) {
+        Write-Host "`nUsing default username: $defaultUsername" -ForegroundColor Green
+        $username = $defaultUsername
+    }
+    
+    Write-Verbose "Using GitHub username: $username"
+
+    # Load example config
+    Write-Verbose "Loading example configuration..."
+    $exampleConfig = Get-Content $configExamplePath -Raw | ConvertFrom-Json
+    Write-Verbose "Successfully loaded example configuration"
+    
+    # Update the configuration with user's details
+    Write-Verbose "Updating configuration with user details..."
+    $currentPath = (Get-Location).Path
+    $repoUrl = "git@github.com:$username/Git-Loop.git"
+    Write-Verbose "Using repository URL: $repoUrl"
+    
+    # Check if Git is initialized
+    Write-Verbose "Checking Git repository status..."
+    $gitDir = Join-Path $currentPath ".git"
+    if (-not (Test-Path $gitDir)) {
+        Write-Verbose "Git repository not found, initializing..."
+        Write-Host "`nInitializing Git repository..." -ForegroundColor Yellow
+        
+        # Initialize Git repository
+        $gitInit = git init 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "Failed to initialize Git repository: $gitInit"
+            throw "Git initialization failed"
+        }
+        
+        Write-Verbose "Adding remote origin..."
+        $gitRemote = git remote add origin $repoUrl 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "Failed to add remote: $gitRemote"
+            throw "Failed to add Git remote"
+        }
+    } else {
+        Write-Verbose "Git repository already initialized"
+        
+        # Update remote if it exists
+        $remoteExists = git remote get-url origin 2>&1
+        if ($LASTEXITCODE -eq 0) {
+            Write-Verbose "Updating existing remote..."
+            git remote set-url origin $repoUrl
+        } else {
+            Write-Verbose "Adding new remote..."
+            git remote add origin $repoUrl
+        }
+    }
+    
+    # Update example config with actual values
+    Write-Verbose "Updating configuration paths and URLs..."
+    $exampleConfig.Repositories[0].Path = $currentPath
+    $exampleConfig.Repositories[0].RemoteUrl = $repoUrl
+    
+    # Create the config file
+    Write-Verbose "Writing new configuration to: $configPath"
+    $exampleConfig | ConvertTo-Json -Depth 10 | Set-Content $configPath
+    Write-Verbose "Configuration file created successfully"
+    
+    Write-Host "`nConfiguration created successfully!" -ForegroundColor Green
+    Write-Host "Next steps:" -ForegroundColor Cyan
+    Write-Host "1. Fork the Git Loop repository at: https://github.com/ih8sirdavi/Git-Loop" -ForegroundColor White
+    Write-Host "2. After forking, your repository will be available at: https://github.com/$username/Git-Loop" -ForegroundColor White
+    Write-Host "3. The script will automatically use SSH for authentication." -ForegroundColor White
+    Write-Host "4. You can edit the config file manually to add more repositories." -ForegroundColor White
+    Write-Host "`nPress any key to continue..." -ForegroundColor Yellow
+    $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+    
+    Write-Verbose "Initialization complete"
+    return $true
+}
+
+function Test-GitSshKey {
+    Write-Verbose "Testing SSH key configuration..."
+    $testResult = ssh -T git@github.com 2>&1
+    return $testResult -like "*successfully authenticated*"
+}
 
 if (-not (Test-Path $configPath)) {
-    Write-Error "Configuration file not found at: $configPath"
-    exit 1
+    try {
+        if (-not (Initialize-Configuration)) {
+            exit 1
+        }
+    } catch {
+        Write-Error "Failed to initialize configuration: $_"
+        exit 1
+    }
 }
 
 try {

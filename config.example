@@ -1,0 +1,16 @@
+{
+    "Repositories": [
+        {
+            "Name": "Git Loop",
+            "Path": ".",
+            "Branch": "main",
+            "RemoteUrl": "git@github.com:USERNAME/Git-Loop.git",
+            "AutoSync": true
+        }
+    ],
+    "SyncInterval": 30,
+    "MaxRetries": 3,
+    "LogRetention": 100,
+    "LogFile": "GitLoop.log",
+    "MaxLogSize": "5MB"
+}
