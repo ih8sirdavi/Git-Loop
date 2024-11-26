@@ -376,3 +376,15 @@ Stack Trace: at <ScriptBlock>, <No file>: line 79
 at Retry-Operation, <No file>: line 45
 at Sync-GitRepository, <No file>: line 78
 at <ScriptBlock>, <No file>: line 133
+[2024-11-26 18:58:21][ERROR][Masterlogs] Operation failed: From github.com:ih8sirdavi/Masterlogs
+Exception: From github.com:ih8sirdavi/Masterlogs
+Stack Trace: at <ScriptBlock>, <No file>: line 79
+at Retry-Operation, <No file>: line 45
+at Sync-GitRepository, <No file>: line 78
+at <ScriptBlock>, <No file>: line 133
+[2024-11-26 18:58:21][ERROR][ANF] Operation failed: From github.com:ih8sirdavi/ANF
+Exception: From github.com:ih8sirdavi/ANF
+Stack Trace: at <ScriptBlock>, <No file>: line 79
+at Retry-Operation, <No file>: line 45
+at Sync-GitRepository, <No file>: line 78
+at <ScriptBlock>, <No file>: line 133
