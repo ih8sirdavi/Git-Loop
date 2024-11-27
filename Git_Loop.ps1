@@ -966,8 +966,13 @@ function Sync-GitRepository {
         Retry-Operation -Operation {
             $output = git fetch origin $repo.Branch 2>&1
             if ($LASTEXITCODE -ne 0) {
-                # Only throw if it's a real error, not just fetch info output
-                $errorOutput = $output | Where-Object { $_ -notmatch '^From ' -and $_ -notmatch '^\* \[new branch\]' }
+                # Only throw if it's a real error, not just fetch info or CRLF warnings
+                $errorOutput = $output | Where-Object { 
+                    $_ -notmatch '^From ' -and 
+                    $_ -notmatch '^\* \[new branch\]' -and
+                    $_ -notmatch 'warning: .+ will be replaced by CRLF' -and
+                    $_ -notmatch 'warning: in the working copy of'
+                }
                 if ($errorOutput) {
                     throw "Failed to fetch from remote: $errorOutput"
                 }
@@ -979,41 +984,67 @@ function Sync-GitRepository {
         if ($status) {
             # Stage all changes
             Retry-Operation -Operation {
-                git add -A
+                $output = git add -A 2>&1
                 if ($LASTEXITCODE -ne 0) {
-                    throw "Failed to stage changes"
+                    $errorOutput = $output | Where-Object { 
+                        $_ -notmatch 'warning: .+ will be replaced by CRLF' -and
+                        $_ -notmatch 'warning: in the working copy of'
+                    }
+                    if ($errorOutput) {
+                        throw "Failed to stage changes: $errorOutput"
+                    }
                 }
             } -OperationName "git add" -Repository $repoName
             
             # Commit changes
             Retry-Operation -Operation {
-                git commit -m "Auto-commit: Local changes"
+                $output = git commit -m "Auto-commit: Local changes" 2>&1
                 if ($LASTEXITCODE -ne 0) {
-                    throw "Failed to commit changes"
+                    $errorOutput = $output | Where-Object { 
+                        $_ -notmatch 'warning: .+ will be replaced by CRLF' -and
+                        $_ -notmatch 'warning: in the working copy of'
+                    }
+                    if ($errorOutput) {
+                        throw "Failed to commit changes: $errorOutput"
+                    }
                 }
             } -OperationName "git commit" -Repository $repoName
         }
         
         # Pull changes (with rebase to handle conflicts)
         Retry-Operation -Operation {
-            git pull --rebase origin $repo.Branch
+            $output = git pull --rebase origin $repo.Branch 2>&1
             if ($LASTEXITCODE -ne 0) {
-                throw "Failed to pull changes"
+                $errorOutput = $output | Where-Object { 
+                    $_ -notmatch 'warning: .+ will be replaced by CRLF' -and
+                    $_ -notmatch 'warning: in the working copy of'
+                }
+                if ($errorOutput) {
+                    throw "Failed to pull changes: $errorOutput"
+                }
             }
         } -OperationName "git pull" -Repository $repoName
         
         # Push our changes if any
         Retry-Operation -Operation {
-            git push origin $repo.Branch
+            $output = git push origin $repo.Branch 2>&1
             if ($LASTEXITCODE -ne 0) {
-                throw "Failed to push changes"
+                $errorOutput = $output | Where-Object { 
+                    $_ -notmatch 'warning: .+ will be replaced by CRLF' -and
+                    $_ -notmatch 'warning: in the working copy of'
+                }
+                if ($errorOutput) {
+                    throw "Failed to push changes: $errorOutput"
+                }
             }
         } -OperationName "git push" -Repository $repoName
         
         Log-Message "Successfully synced repository" -repository $repoName
+        Update-RepositoryStatus -repoName $repoName -status "Success"
     }
     catch {
         Log-Error "Error syncing repository: $_" -repository $repoName -errorRecord $_
+        Update-RepositoryStatus -repoName $repoName -status "Error"
         throw
     }
     finally {
