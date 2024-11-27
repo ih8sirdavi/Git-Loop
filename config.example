@@ -5,7 +5,14 @@
             "Path": ".",
             "Branch": "main",
             "RemoteUrl": "git@github.com:USERNAME/Git-Loop.git",
-            "AutoSync": true
+            "AutoSync": true,
+            "NotificationLevel": "All",
+            "CustomActions": [],
+            "SyncRules": {
+                "AutoMerge": false,
+                "FetchTags": true,
+                "PushTags": false
+            }
         }
     ],
     "SyncInterval": 30,
@@ -39,5 +46,55 @@
                 "Warning": "#FFC107"
             }
         }
+    },
+    "System": {
+        "StartWithWindows": false,
+        "StartMinimized": false,
+        "MinimizeToTray": true,
+        "ShowNotifications": true,
+        "NotificationSettings": {
+            "SyncSuccess": true,
+            "SyncError": true,
+            "NewCommits": true,
+            "Conflicts": true
+        },
+        "QuickActions": {
+            "DoubleClickTray": "ShowWindow",
+            "MiddleClickTray": "QuickSync"
+        }
+    },
+    "Performance": {
+        "MaxParallelJobs": 3,
+        "ResourceLimit": {
+            "CPU": 50,
+            "Memory": "256MB"
+        },
+        "SmartScheduling": true
+    },
+    "Security": {
+        "UseCredentialManager": true,
+        "RequireAuthentication": false,
+        "AccessControl": {
+            "AllowRemoteControl": false,
+            "AllowedHosts": []
+        }
+    },
+    "Integration": {
+        "EnableWebhooks": false,
+        "Webhooks": [],
+        "ChatPlatform": {
+            "Enable": false,
+            "Platform": "None",
+            "WebhookUrl": ""
+        }
+    },
+    "Advanced": {
+        "CustomScripts": {
+            "PreSync": "",
+            "PostSync": "",
+            "OnError": ""
+        },
+        "DebugMode": false,
+        "CompactMode": false
     }
 }
