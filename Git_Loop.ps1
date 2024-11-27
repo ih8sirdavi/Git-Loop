@@ -246,7 +246,7 @@ try {
     
     # Validate required configuration fields
     Write-Verbose "Validating configuration..."
-    $requiredFields = @('Repositories', 'SyncInterval', 'MaxRetries', 'LogRetention', 'LogFile', 'MaxLogSize')
+    $requiredFields = @('Repositories', 'SyncInterval', 'MaxRetries', 'LogRetention', 'LogFile', 'MaxLogSize', 'JobTimeout')
     $missingFields = $requiredFields | Where-Object { -not $config.PSObject.Properties.Name.Contains($_) }
     if ($missingFields) {
         throw "Missing required configuration fields: $($missingFields -join ', ')"
@@ -284,6 +284,7 @@ try {
         LogRetention = $config.LogRetention
         LogFile = $config.LogFile
         MaxLogSize = $config.MaxLogSize
+        JobTimeout = $config.JobTimeout
     }
     Write-Verbose "Configuration loaded successfully"
     Write-Verbose "Loaded $(($config.Repositories | Measure-Object).Count) repositories"
@@ -953,40 +954,36 @@ function Start-JobMonitor {
     
     $jobsToRemove = @()
     
-    foreach ($entry in $script:runningJobs.GetEnumerator()) {
-        $job = $entry.Value.Job
-        $name = $entry.Value.Name
-        $startTime = $entry.Value.StartTime
-        $repoName = $name -replace '^(?:Initial )?Sync (.+)$','$1'
+    foreach ($key in $script:runningJobs.Keys) {
+        $jobInfo = $script:runningJobs[$key]
+        $job = $jobInfo.Job
+        $repoName = $key -replace '^.*Sync (.+)$', '$1'
         
-        if ($job.State -eq 'Completed') {
-            try {
-                $result = Receive-Job -Job $job -ErrorAction Stop
-                Log-Message "Operation completed: $name" -type "INFO"
-                Update-RepositoryStatus -repoName $repoName -status "Success"
-                Update-RepositoryDetails $repoName
-            }
-            catch {
-                Log-Error "Operation failed: $_" -repository $repoName -errorRecord $_
-                Update-RepositoryStatus -repoName $repoName -status "Error"
-            }
-            finally {
-                $jobsToRemove += $entry.Key
-                Remove-Job -Job $job
-            }
-        }
-        elseif ($job.State -eq 'Failed') {
-            Log-Error "Operation failed" -repository $repoName
+        # Check for job timeout
+        $runTime = (Get-Date) - $jobInfo.StartTime
+        if ($runTime.TotalSeconds -gt $config.JobTimeout) {
+            Write-Verbose "Job $key exceeded timeout of $($config.JobTimeout) seconds"
+            Log-Message "Operation timed out after $($config.JobTimeout) seconds" -type "WARNING" -repository $repoName
+            Stop-Job -Job $job -ErrorAction SilentlyContinue
+            Remove-Job -Job $job -ErrorAction SilentlyContinue
             Update-RepositoryStatus -repoName $repoName -status "Error"
-            $jobsToRemove += $entry.Key
-            Remove-Job -Job $job
+            $jobsToRemove += $key
+            continue
         }
-        elseif (((Get-Date) - $startTime).TotalMinutes -gt 5) {
-            Log-Error "Operation timed out" -repository $repoName
-            Update-RepositoryStatus -repoName $repoName -status "Error"
-            Stop-Job -Job $job
+
+        # Check job state
+        if ($job.State -eq "Completed") {
+            $result = Receive-Job -Job $job
             Remove-Job -Job $job
-            $jobsToRemove += $entry.Key
+            Update-RepositoryStatus -repoName $repoName -status "Success"
+            $jobsToRemove += $key
+        }
+        elseif ($job.State -eq "Failed") {
+            $result = Receive-Job -Job $job
+            Remove-Job -Job $job
+            Update-RepositoryStatus -repoName $repoName -status "Error"
+            $jobsToRemove += $key
+            Log-Message "Operation failed" -type "ERROR" -repository $repoName
         }
     }
     

@@ -13,6 +13,7 @@
     "LogRetention": 100,
     "LogFile": "GitLoop.log",
     "MaxLogSize": "5MB",
+    "JobTimeout": 300,
     "Theme": "Light",
     "UI": {
         "Themes": {
