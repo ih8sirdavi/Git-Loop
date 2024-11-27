@@ -348,3 +348,125 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## 🤔 Support
 
 For issues and feature requests, please use the GitHub issues tracker.
+
+## 🌟 Features
+
+- **Automatic Repository Sync**
+  * Monitor multiple Git repositories
+  * Configurable sync intervals
+  * Smart conflict resolution
+  * Automatic retry on failures
+
+- **Background Processing**
+  * Non-blocking sync operations
+  * Configurable job timeouts
+  * Graceful error handling
+  * Real-time status updates
+
+- **Modern UI**
+  * Clean, intuitive interface
+  * Dark/Light theme support
+  * Real-time progress indicators
+  * Detailed repository information
+
+- **Robust Error Handling**
+  * Automatic retry with backoff
+  * Detailed error logging
+  * Timeout protection
+  * Status preservation
+
+## ⚙️ Configuration
+
+The application uses a JSON configuration file (`config`) with these key settings:
+
+```json
+{
+    "Repositories": [
+        {
+            "Name": "Git Loop",
+            "Path": ".",
+            "Branch": "main",
+            "RemoteUrl": "git@github.com:USERNAME/Git-Loop.git",
+            "AutoSync": true
+        }
+    ],
+    "SyncInterval": 30,
+    "MaxRetries": 3,
+    "JobTimeoutSeconds": 300,
+    "LogRetention": 100,
+    "LogFile": "GitLoop.log",
+    "MaxLogSize": "5MB",
+    "Theme": "Light"
+}
+```
+
+### Configuration Options
+
+- **SyncInterval**: Time between sync operations (seconds)
+- **MaxRetries**: Number of retry attempts for failed operations
+- **JobTimeoutSeconds**: Maximum duration for sync operations (default: 300s)
+- **LogRetention**: Number of log files to keep
+- **MaxLogSize**: Maximum size for log files
+- **Theme**: UI theme ("Light" or "Dark")
+
+### Job Timeout Behavior
+
+The `JobTimeoutSeconds` setting controls how long Git Loop will wait for sync operations to complete:
+
+1. **Default Duration**: 5 minutes (300 seconds)
+2. **Timeout Actions**:
+   - Operation is forcefully stopped
+   - Error is logged with timeout duration
+   - Repository status updates to "Error"
+   - Job is cleaned up and removed
+
+3. **Common Timeout Scenarios**:
+   - Slow network connections
+   - Large repository syncs
+   - Git server unresponsiveness
+   - SSH authentication delays
+
+4. **Handling Timeouts**:
+   - Failed operations will retry on next sync cycle
+   - Check logs for detailed error messages
+   - Adjust timeout duration if needed
+   - Consider network and repository size
+
+## 📁 Directory Structure
+
+```
+Git Loop/
+├── Git_Loop.ps1      # Main script
+├── config            # Configuration file
+├── config.example    # Example configuration
+├── README.md         # Documentation
+└── logs/            # Log directory
+    ├── GitLoop.log  # Main log file
+    └── errors.log   # Error log file
+```
+
+## 📝 Usage Tips
+
+1. **Repository Selection**
+   - Check/uncheck repositories to monitor
+   - Status updates in real-time
+   - Visual indicators show sync status
+   - Hover for repository details
+
+2. **Monitoring**
+   - Start/Stop monitoring with buttons
+   - View repository details and status
+   - Monitor sync progress
+   - Auto-timeout prevents stuck operations
+
+3. **Logs**
+   - Real-time operation logs in status window
+   - Detailed logs in `logs/GitLoop.log`
+   - Error logs in `logs/errors.log`
+   - Configuration backups in `logs/config.backup`
+
+4. **Performance**
+   - Adjust sync interval for your needs
+   - Configure timeouts based on repo size
+   - Use auto-sync selectively
+   - Monitor resource usage
