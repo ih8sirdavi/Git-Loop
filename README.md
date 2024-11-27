@@ -5,10 +5,39 @@
 - **Last Updated**: 2024
 - **Platform**: Windows-only (Currently)
 - **Status**: Personal Development Tool
+- **Auto-Commit**: Testing Git Loop signature functionality
 
 > **Note**: This is the first iteration of Git Loop, currently designed as a Windows-specific PowerShell tool for personal use. Future versions will expand into a full-featured, cross-platform team development solution.
 
 A PowerShell-based Git repository synchronization tool that automatically commits and syncs changes across multiple repositories. Each commit is tagged with "Git Loop (PowerShell)" for easy identification.
+
+## 🔍 Commit Identification
+
+```powershell
+# Example Git Loop commit message:
+Git Loop (PowerShell) - Auto-sync
+
+- Repository: Git Loop
+- Timestamp: 2024-01-XX HH:mm:ss
+- Branch: main
+```
+
+### Verification Process
+The program can verify its own commits by:
+1. Checking commit message prefix "Git Loop (PowerShell)"
+2. Validating commit structure
+3. Confirming repository and branch details
+
+```mermaid
+graph TD
+    A[Check Commit] --> B{Has Git Loop Signature?}
+    B -->|Yes| C[Parse Details]
+    B -->|No| D[Manual Commit]
+    
+    C --> E{Valid Format?}
+    E -->|Yes| F[Git Loop Commit]
+    E -->|No| D
+```
 
 ## 🎯 Current Scope
 

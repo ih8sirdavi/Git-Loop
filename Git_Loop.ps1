@@ -957,6 +957,76 @@ function Update-RepositoryDetails {
     }
 }
 
+# Function to verify if a commit was made by Git Loop
+function Test-GitLoopCommit {
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$CommitHash
+    )
+    
+    try {
+        # Get commit message
+        $commitMessage = git show -s --format=%B $CommitHash 2>$null
+        if ($LASTEXITCODE -ne 0) {
+            Write-Verbose "Failed to get commit message for hash: $CommitHash"
+            return $false
+        }
+
+        # Check for Git Loop signature
+        if (-not ($commitMessage -match "^Git Loop \(PowerShell\) - Auto-sync")) {
+            Write-Verbose "Commit does not have Git Loop signature"
+            return $false
+        }
+
+        # Validate commit structure
+        $requiredFields = @(
+            "- Repository:",
+            "- Timestamp:",
+            "- Branch:"
+        )
+
+        foreach ($field in $requiredFields) {
+            if (-not ($commitMessage -match $field)) {
+                Write-Verbose "Commit missing required field: $field"
+                return $false
+            }
+        }
+
+        Write-Verbose "Valid Git Loop commit detected"
+        return $true
+    }
+    catch {
+        Write-Error "Error checking commit: $_"
+        return $false
+    }
+}
+
+# Function to get last Git Loop commit
+function Get-LastGitLoopCommit {
+    try {
+        # Get all commits
+        $commits = git log --format="%H" -n 10 2>$null
+        if ($LASTEXITCODE -ne 0) {
+            throw "Failed to get commit history"
+        }
+
+        # Check each commit
+        foreach ($commit in $commits -split "`n") {
+            if (Test-GitLoopCommit -CommitHash $commit) {
+                Write-Verbose "Found last Git Loop commit: $commit"
+                return $commit
+            }
+        }
+
+        Write-Verbose "No Git Loop commits found in recent history"
+        return $null
+    }
+    catch {
+        Write-Error "Error finding last Git Loop commit: $_"
+        return $null
+    }
+}
+
 # Function to sync a Git repository with retry and status updates
 function Sync-GitRepository {
     param([string]$repoName)
@@ -1038,6 +1108,15 @@ Git Loop (PowerShell) - Auto-sync
             if ($LASTEXITCODE -ne 0) {
                 throw "Failed to commit changes"
             }
+            
+            # Verify commit was created properly
+            $lastCommit = Get-LastGitLoopCommit
+            if (-not $lastCommit) {
+                Write-Warning "Last commit does not have Git Loop signature"
+            } else {
+                Write-Verbose "Verified Git Loop commit signature"
+            }
+            
             Log-Message "Created Git Loop commit" -repository $repoName
             
             # Push changes
