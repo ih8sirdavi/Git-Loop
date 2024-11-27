@@ -35,29 +35,6 @@ cd "Git Loop"
 .\Git_Loop.ps1
 ```
 
-## 🐛 Recent Bug Fixes & Improvements
-
-1. Job Monitor Enhancement (2024-11-27)
-   - Added dedicated job monitor timer to check job status every second
-   - Fixed issue where job completion wasn't being properly tracked
-   - Improved status updates for background sync operations
-
-2. Git Fetch Error Handling (2024-11-27)
-   - Fixed false positive errors in logs from normal git fetch output
-   - Added smarter error detection for git operations
-   - Improved error messages to show actual failure reasons
-   - Reduced noise in error logs by filtering out standard git messages
-
-3. Timer Synchronization
-   - Fixed disconnection between timers and their functions
-   - Added proper cleanup of timers when stopping monitoring
-   - Synchronized countdown display with actual sync operations
-
-4. Known Issues
-   - Git fetch output may still appear in logs but is not an error
-   - Normal messages like "From github.com:user/repo" are informational only
-   - Check error.log only for actual sync failures
-
 ## 🧪 Testing Background Sync
 
 1. Preparation:
@@ -280,6 +257,42 @@ The `.gitignore` is configured to maintain a clean repository while developing:
    - 🔲 Team collaboration features
    - 🔲 Cloud integration
    - 🔲 Web interface
+
+## 🐞 Recent Bug Fixes & Improvements
+
+### v1.1.0 (Latest)
+1. Background Sync Enhancements:
+   - Added job monitor timer to check job status every second
+   - Fixed disconnected timer issue with sync function
+   - Improved job tracking and completion detection
+   - Added real-time countdown display
+
+2. Error Handling Improvements:
+   - Fixed false positive errors from git fetch output
+   - Better distinction between informational git messages and actual errors
+   - More detailed error logging for troubleshooting
+   - Improved error messages in status display
+
+3. Timer Management:
+   - Synchronized all timers (sync, countdown, job monitor)
+   - Proper cleanup of timers on application close
+   - Better handling of timer state during start/stop
+
+4. UI Improvements:
+   - Added real-time sync countdown display
+   - Better status indicators for sync operations
+   - Clearer error messages in status box
+
+### Known Issues
+- Git fetch output may appear in error logs from previous versions
+- Multiple rapid start/stop actions may need a restart to reset timers
+- Status updates might lag slightly during heavy sync operations
+
+### Upcoming Features
+- Configurable job timeout settings
+- More detailed job progress reporting
+- Enhanced error recovery mechanisms
+- UI improvements for sync status display
 
 ## ⚖️ License
 
