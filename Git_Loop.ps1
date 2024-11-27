@@ -658,43 +658,6 @@ function Update-RepositoryStatus {
     }
 }
 
-# Retry operation with exponential backoff
-function Retry-Operation {
-    param(
-        [Parameter(Mandatory=$true)]
-        [scriptblock]$Operation,
-        [string]$OperationName = "Operation",
-        [int]$MaxRetries = 3,
-        [int]$InitialDelay = 2,
-        [string]$Repository = ""
-    )
-    
-    $delay = $InitialDelay
-    $retryCount = 0
-    $success = $false
-    
-    do {
-        try {
-            & $Operation
-            $success = $true
-            break
-        }
-        catch {
-            $retryCount++
-            if ($retryCount -ge $MaxRetries) {
-                Log-Error "Failed after $MaxRetries retries: $OperationName" -repository $Repository -errorRecord $_
-                throw
-            }
-            
-            Log-Message "Retry $retryCount/$MaxRetries for $OperationName (waiting ${delay}s)" -repository $Repository -type "WARNING"
-            Start-Sleep -Seconds $delay
-            $delay *= 2  # Exponential backoff
-        }
-    } while (-not $success -and $retryCount -lt $MaxRetries)
-    
-    return $success
-}
-
 # Create status panel
 $statusPanel = New-Object System.Windows.Forms.Panel
 $statusPanel.Dock = [System.Windows.Forms.DockStyle]::Fill
@@ -800,394 +763,6 @@ $progressBar.Style = [System.Windows.Forms.ProgressBarStyle]::Marquee
 $progressBar.MarqueeAnimationSpeed = 30
 $progressBar.Visible = $false
 $form.Controls.Add($progressBar)
-
-# Hashtable to track running jobs
-$script:runningJobs = @{}
-
-# Function to start an async operation
-function Start-AsyncOperation {
-    param(
-        [Parameter(Mandatory=$true)]
-        [string]$OperationName,
-        [Parameter(Mandatory=$true)]
-        [string]$RepoName
-    )
-    
-    # Create and start the job with all necessary functions
-    $job = Start-Job -ScriptBlock {
-        param($repoName, $config, $PSScriptRoot)
-        
-        # Define all required functions
-        function Log-Message {
-            param(
-                [string]$message,
-                [string]$type = "INFO",
-                [string]$repository = ""
-            )
-            
-            $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-            $logEntry = "[$timestamp][$type]"
-            if ($repository) { $logEntry += "[$repository]" }
-            $logEntry += " $message"
-            
-            $logPath = Join-Path $PSScriptRoot "logs\GitLoop.log"
-            Add-Content -Path $logPath -Value $logEntry
-        }
-
-        function Log-Error {
-            param(
-                [string]$message,
-                [string]$repository = "",
-                [System.Management.Automation.ErrorRecord]$errorRecord = $null
-            )
-            
-            $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-            $errorMessage = "[$timestamp][ERROR]"
-            if ($repository) {
-                $errorMessage += "[$repository] "
-            }
-            $errorMessage += $message
-            
-            if ($errorRecord) {
-                $errorMessage += "`nException: $($errorRecord.Exception.Message)"
-                $errorMessage += "`nStack Trace: $($errorRecord.ScriptStackTrace)"
-            }
-            
-            # Write to error log file
-            $errorLogPath = Join-Path $PSScriptRoot "logs\errors.log"
-            Add-Content -Path $errorLogPath -Value $errorMessage
-            
-            # Also log to main log
-            Log-Message $message -repository $repository -type "ERROR"
-        }
-
-        function Update-RepositoryStatus {
-            param(
-                [string]$repoName,
-                [string]$status  # "Syncing", "Error", "Success", "Pending"
-            )
-            Log-Message "Updated status for $repoName to: $status" -type "INFO" -repository $repoName
-        }
-        
-        function Retry-Operation {
-            param(
-                [Parameter(Mandatory=$true)]
-                [scriptblock]$Operation,
-                [string]$OperationName = "Operation",
-                [int]$MaxRetries = 3,
-                [int]$InitialDelay = 2,
-                [string]$Repository = ""
-            )
-            
-            $delay = $InitialDelay
-            $retryCount = 0
-            $success = $false
-            
-            do {
-                try {
-                    & $Operation
-                    $success = $true
-                    break
-                }
-                catch {
-                    $retryCount++
-                    if ($retryCount -ge $MaxRetries) {
-                        Log-Error "Failed after $MaxRetries retries: $OperationName" -repository $Repository -errorRecord $_
-                        throw
-                    }
-                    
-                    Log-Message "Retry $retryCount/$MaxRetries for $OperationName (waiting ${delay}s)" -repository $Repository -type "WARNING"
-                    Start-Sleep -Seconds $delay
-                    $delay *= 2
-                }
-            } while (-not $success -and $retryCount -lt $MaxRetries)
-            
-            return $success
-        }
-        
-        function Sync-GitRepository {
-            param([string]$repoName)
-            
-            $repo = $config.Repositories | Where-Object { $_.Name -eq $repoName }
-            if (-not $repo) {
-                Log-Error "Repository not found in configuration" -repository $repoName
-                return
-            }
-            
-            try {
-                Set-Location $repo.Path
-                
-                # Fetch latest changes
-                Retry-Operation -Operation {
-                    $output = git fetch origin $repo.Branch 2>&1
-                    if ($LASTEXITCODE -ne 0) {
-                        # Only throw if it's a real error, not just fetch info output
-                        $errorOutput = $output | Where-Object { $_ -notmatch '^From ' -and $_ -notmatch '^\* \[new branch\]' }
-                        if ($errorOutput) {
-                            throw "Failed to fetch from remote: $errorOutput"
-                        }
-                    }
-                } -OperationName "git fetch" -Repository $repoName
-                
-                # Check for local changes
-                $status = git status --porcelain
-                if ($status) {
-                    # Stage all changes
-                    Retry-Operation -Operation {
-                        git add -A
-                        if ($LASTEXITCODE -ne 0) {
-                            throw "Failed to stage changes"
-                        }
-                    } -OperationName "git add" -Repository $repoName
-                    
-                    # Commit changes
-                    Retry-Operation -Operation {
-                        git commit -m "Auto-commit: Local changes"
-                        if ($LASTEXITCODE -ne 0) {
-                            throw "Failed to commit changes"
-                        }
-                    } -OperationName "git commit" -Repository $repoName
-                }
-                
-                # Pull changes (with rebase to handle conflicts)
-                Retry-Operation -Operation {
-                    git pull --rebase origin $repo.Branch
-                    if ($LASTEXITCODE -ne 0) {
-                        throw "Failed to pull changes"
-                    }
-                } -OperationName "git pull" -Repository $repoName
-                
-                # Push our changes if any
-                Retry-Operation -Operation {
-                    git push origin $repo.Branch
-                    if ($LASTEXITCODE -ne 0) {
-                        throw "Failed to push changes"
-                    }
-                } -OperationName "git push" -Repository $repoName
-                
-                Log-Message "Successfully synced repository" -repository $repoName
-            }
-            catch {
-                Log-Error "Error syncing repository: $_" -repository $repoName -errorRecord $_
-                throw
-            }
-            finally {
-                Set-Location $PSScriptRoot
-            }
-        }
-        
-        # Run the sync operation
-        Sync-GitRepository $repoName
-    } -ArgumentList $RepoName, $config, $PSScriptRoot
-    
-    # Track the job
-    $script:runningJobs[$OperationName] = @{
-        Job = $job
-        StartTime = Get-Date
-        Name = $OperationName
-    }
-    
-    Log-Message "Started async operation: $OperationName" -type "INFO"
-    Show-Progress $true
-    Update-RepositoryStatus -repoName $RepoName -status "Syncing"
-    
-    # Start monitoring the job
-    Start-JobMonitor
-}
-
-# Function to show/hide progress
-function Show-Progress {
-    param([bool]$show)
-    Update-UI {
-        $progressBar.Visible = $show
-    }
-}
-
-# Function to monitor jobs
-function Start-JobMonitor {
-    if ($script:runningJobs.Count -eq 0) {
-        Show-Progress $false
-        return
-    }
-    
-    $jobsToRemove = @()
-    
-    foreach ($entry in $script:runningJobs.GetEnumerator()) {
-        $job = $entry.Value.Job
-        $name = $entry.Value.Name
-        $startTime = $entry.Value.StartTime
-        $repoName = $name -replace '^(?:Initial )?Sync (.+)$','$1'
-        
-        if ($job.State -eq 'Completed') {
-            try {
-                $result = Receive-Job -Job $job -ErrorAction Stop
-                Log-Message "Operation completed: $name" -type "INFO"
-                Update-RepositoryStatus -repoName $repoName -status "Success"
-                Update-RepositoryDetails $repoName
-            }
-            catch {
-                Log-Error "Operation failed: $_" -repository $repoName -errorRecord $_
-                Update-RepositoryStatus -repoName $repoName -status "Error"
-            }
-            finally {
-                $jobsToRemove += $entry.Key
-                Remove-Job -Job $job
-            }
-        }
-        elseif ($job.State -eq 'Failed') {
-            Log-Error "Operation failed" -repository $repoName
-            Update-RepositoryStatus -repoName $repoName -status "Error"
-            $jobsToRemove += $entry.Key
-            Remove-Job -Job $job
-        }
-        elseif (((Get-Date) - $startTime).TotalSeconds -gt $config.JobTimeoutSeconds) {
-            Log-Error "Operation timed out after $($config.JobTimeoutSeconds) seconds" -repository $repoName
-            Update-RepositoryStatus -repoName $repoName -status "Error"
-            Stop-Job -Job $job
-            Remove-Job -Job $job
-            $jobsToRemove += $entry.Key
-        }
-    }
-    
-    # Remove completed/failed/timed out jobs
-    foreach ($key in $jobsToRemove) {
-        $script:runningJobs.Remove($key)
-    }
-    
-    # Hide progress if no jobs are running
-    if ($script:runningJobs.Count -eq 0) {
-        Show-Progress $false
-    }
-}
-
-# Timer for periodic sync
-$timer = New-Object System.Windows.Forms.Timer
-$timer.Interval = $config.SyncInterval * 1000  # Convert to milliseconds
-
-# Add countdown timer
-$countdownTimer = New-Object System.Windows.Forms.Timer
-$countdownTimer.Interval = 1000  # Update every second
-$script:nextSyncTime = $null
-
-# Add job monitor timer
-$jobMonitorTimer = New-Object System.Windows.Forms.Timer
-$jobMonitorTimer.Interval = 1000  # Check jobs every second
-$jobMonitorTimer.Add_Tick({
-    Start-JobMonitor
-})
-
-$countdownTimer.Add_Tick({
-    if ($script:nextSyncTime) {
-        $timeLeft = $script:nextSyncTime - (Get-Date)
-        if ($timeLeft.TotalSeconds -gt 0) {
-            $statusLabel.Text = "Next sync in: $([Math]::Floor($timeLeft.TotalSeconds)) seconds"
-        }
-    }
-})
-
-# Add timer tick handler
-$timer.Add_Tick({
-    Write-Verbose "Timer tick: Starting periodic sync"
-    $script:nextSyncTime = (Get-Date).AddSeconds($config.SyncInterval)
-    $selectedRepos = Get-SelectedRepositories
-    
-    foreach ($repoName in $selectedRepos) {
-        # Skip if a sync is already in progress for this repo
-        if ($script:runningJobs.Keys | Where-Object { $_ -like "*Sync $repoName" }) {
-            Write-Verbose "Skipping $repoName - sync already in progress"
-            continue
-        }
-        Start-AsyncOperation -OperationName "Sync $repoName" -RepoName $repoName
-    }
-})
-
-# Update status strip with next sync time
-function Update-StatusStrip {
-    $script:nextSyncTime = (Get-Date).AddSeconds($config.SyncInterval)
-    $statusLabel.Text = "Next sync in: $($config.SyncInterval) seconds"
-}
-
-# Start button click handler with verbose logging
-$startButton.Add_Click({
-    $selectedRepos = Get-SelectedRepositories
-    if ($selectedRepos.Count -eq 0) {
-        [System.Windows.Forms.MessageBox]::Show("Please select at least one repository to monitor.", "No Repositories Selected", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Warning)
-        return
-    }
-    
-    $timer.Start()
-    $countdownTimer.Start()
-    $jobMonitorTimer.Start()
-    $startButton.Enabled = $false
-    $stopButton.Enabled = $true
-    Log-Message "Started monitoring selected repositories"
-    Update-StatusStrip
-    
-    Write-Verbose "Performing initial sync"
-    # Clear any existing jobs before starting new ones
-    $script:runningJobs.Keys | ForEach-Object {
-        $job = $script:runningJobs[$_].Job
-        if ($job) {
-            Stop-Job -Job $job -ErrorAction SilentlyContinue
-            Remove-Job -Job $job -ErrorAction SilentlyContinue
-        }
-    }
-    $script:runningJobs.Clear()
-    
-    $selectedRepos | ForEach-Object {
-        Start-AsyncOperation -OperationName "Initial Sync $_" -RepoName $_
-    }
-})
-
-# Stop button click handler
-$stopButton.Add_Click({
-    Write-Verbose "Stop button clicked - stopping sync operations"
-    $timer.Stop()
-    $countdownTimer.Stop()
-    $jobMonitorTimer.Stop()
-    $startButton.Enabled = $true
-    $stopButton.Enabled = $false
-    
-    # Stop and remove all running jobs
-    $script:runningJobs.Keys | ForEach-Object {
-        $job = $script:runningJobs[$_].Job
-        if ($job) {
-            Stop-Job -Job $job -ErrorAction SilentlyContinue
-            Remove-Job -Job $job -ErrorAction SilentlyContinue
-        }
-    }
-    $script:runningJobs.Clear()
-    
-    $statusLabel.Text = "Monitoring stopped"
-    $script:nextSyncTime = $null
-    Log-Message "Stopped monitoring repositories"
-})
-
-# Clear button click handler
-$clearButton.Add_Click({
-    $statusBox.Clear()
-    $statusLabel.Text = "Log cleared"
-})
-
-# Form closing handler
-$form.Add_FormClosing({
-    if ($timer) {
-        $timer.Stop()
-        $timer.Dispose()
-    }
-    if ($countdownTimer) {
-        $countdownTimer.Stop()
-        $countdownTimer.Dispose()
-    }
-    if ($jobMonitorTimer) {
-        $jobMonitorTimer.Stop()
-        $jobMonitorTimer.Dispose()
-    }
-    if ($testTimer) {
-        $testTimer.Stop()
-        $testTimer.Dispose()
-    }
-})
 
 # Create tooltips
 $tooltips = New-Object System.Windows.Forms.ToolTip
@@ -1336,6 +911,354 @@ function Update-RepositoryDetails {
         Write-Verbose "Finished updating repository details for $repoName"
     }
 }
+
+# Retry operation with exponential backoff
+function Retry-Operation {
+    param(
+        [Parameter(Mandatory=$true)]
+        [scriptblock]$Operation,
+        [string]$OperationName = "Operation",
+        [int]$MaxRetries = 3,
+        [int]$InitialDelay = 2,
+        [string]$Repository = ""
+    )
+    
+    $delay = $InitialDelay
+    $retryCount = 0
+    $success = $false
+    
+    do {
+        try {
+            & $Operation
+            $success = $true
+            break
+        }
+        catch {
+            $retryCount++
+            if ($retryCount -ge $MaxRetries) {
+                Log-Error "Failed after $MaxRetries retries: $OperationName" -repository $Repository -errorRecord $_
+                throw
+            }
+            
+            Log-Message "Retry $retryCount/$MaxRetries for $OperationName (waiting ${delay}s)" -repository $Repository -type "WARNING"
+            Start-Sleep -Seconds $delay
+            $delay *= 2  # Exponential backoff
+        }
+    } while (-not $success -and $retryCount -lt $MaxRetries)
+    
+    return $success
+}
+
+# Function to sync a Git repository
+function Sync-GitRepository {
+    param([string]$repoName)
+    
+    $repo = $config.Repositories | Where-Object { $_.Name -eq $repoName }
+    if (-not $repo) {
+        Log-Error "Repository not found in configuration" -repository $repoName
+        return
+    }
+    
+    try {
+        Set-Location $repo.Path
+        
+        # Fetch latest changes
+        Retry-Operation -Operation {
+            $output = git fetch origin $repo.Branch 2>&1
+            if ($LASTEXITCODE -ne 0) {
+                # Only throw if it's a real error, not just fetch info output
+                $errorOutput = $output | Where-Object { $_ -notmatch '^From ' -and $_ -notmatch '^\* \[new branch\]' }
+                if ($errorOutput) {
+                    throw "Failed to fetch from remote: $errorOutput"
+                }
+            }
+        } -OperationName "git fetch" -Repository $repoName
+        
+        # Check for local changes
+        $status = git status --porcelain
+        if ($status) {
+            # Stage all changes
+            Retry-Operation -Operation {
+                git add -A
+                if ($LASTEXITCODE -ne 0) {
+                    throw "Failed to stage changes"
+                }
+            } -OperationName "git add" -Repository $repoName
+            
+            # Commit changes
+            Retry-Operation -Operation {
+                git commit -m "Auto-commit: Local changes"
+                if ($LASTEXITCODE -ne 0) {
+                    throw "Failed to commit changes"
+                }
+            } -OperationName "git commit" -Repository $repoName
+        }
+        
+        # Pull changes (with rebase to handle conflicts)
+        Retry-Operation -Operation {
+            git pull --rebase origin $repo.Branch
+            if ($LASTEXITCODE -ne 0) {
+                throw "Failed to pull changes"
+            }
+        } -OperationName "git pull" -Repository $repoName
+        
+        # Push our changes if any
+        Retry-Operation -Operation {
+            git push origin $repo.Branch
+            if ($LASTEXITCODE -ne 0) {
+                throw "Failed to push changes"
+            }
+        } -OperationName "git push" -Repository $repoName
+        
+        Log-Message "Successfully synced repository" -repository $repoName
+    }
+    catch {
+        Log-Error "Error syncing repository: $_" -repository $repoName -errorRecord $_
+        throw
+    }
+    finally {
+        Set-Location $PSScriptRoot
+    }
+}
+
+# Start a background job for repository sync
+function Start-RepositoryJob {
+    param([string]$RepoName)
+    
+    $syncScript = ${function:Sync-GitRepository}.ToString()
+    $retryScript = ${function:Retry-Operation}.ToString()
+    $logScript = ${function:Log-Message}.ToString()
+    $logErrorScript = ${function:Log-Error}.ToString()
+    $updateStatusScript = ${function:Update-RepositoryStatus}.ToString()
+    
+    $job = Start-Job -ScriptBlock {
+        param($repoName, $config, $PSScriptRoot, $syncScript, $retryScript, $logScript, $logErrorScript, $updateStatusScript)
+        
+        # Load functions into job scope
+        ${function:Sync-GitRepository} = $syncScript
+        ${function:Retry-Operation} = $retryScript
+        ${function:Log-Message} = $logScript
+        ${function:Log-Error} = $logErrorScript
+        ${function:Update-RepositoryStatus} = $updateStatusScript
+        
+        # Run the sync operation
+        try {
+            Sync-GitRepository $repoName
+        }
+        catch {
+            Log-Error "Job failed: $_" -repository $repoName -errorRecord $_
+            throw
+        }
+    } -ArgumentList $RepoName, $config, $PSScriptRoot, $syncScript, $retryScript, $logScript, $logErrorScript, $updateStatusScript
+    
+    # Track the job
+    $script:runningJobs[$RepoName] = @{
+        Job = $job
+        StartTime = Get-Date
+        Name = $RepoName
+    }
+    
+    Log-Message "Started async operation: $RepoName" -type "INFO"
+    Show-Progress $true
+    Update-RepositoryStatus -repoName $RepoName -status "Syncing"
+    
+    # Start monitoring the job
+    Start-JobMonitor
+}
+
+# Function to show/hide progress
+function Show-Progress {
+    param([bool]$show)
+    Update-UI {
+        $progressBar.Visible = $show
+    }
+}
+
+# Function to monitor jobs
+function Start-JobMonitor {
+    if ($script:runningJobs.Count -eq 0) {
+        Show-Progress $false
+        return
+    }
+    
+    $jobsToRemove = @()
+    
+    foreach ($entry in $script:runningJobs.GetEnumerator()) {
+        $job = $entry.Value.Job
+        $name = $entry.Value.Name
+        $startTime = $entry.Value.StartTime
+        $repoName = $name
+        
+        if ($job.State -eq 'Completed') {
+            try {
+                $result = Receive-Job -Job $job -ErrorAction Stop
+                Log-Message "Operation completed: $name" -type "INFO"
+                Update-RepositoryStatus -repoName $repoName -status "Success"
+                Update-RepositoryDetails $repoName
+            }
+            catch {
+                Log-Error "Operation failed: $_" -repository $repoName -errorRecord $_
+                Update-RepositoryStatus -repoName $repoName -status "Error"
+            }
+            finally {
+                $jobsToRemove += $entry.Key
+                Remove-Job -Job $job
+            }
+        }
+        elseif ($job.State -eq 'Failed') {
+            Log-Error "Operation failed" -repository $repoName
+            Update-RepositoryStatus -repoName $repoName -status "Error"
+            $jobsToRemove += $entry.Key
+            Remove-Job -Job $job
+        }
+        elseif (((Get-Date) - $startTime).TotalSeconds -gt $config.JobTimeoutSeconds) {
+            Log-Error "Operation timed out after $($config.JobTimeoutSeconds) seconds" -repository $repoName
+            Update-RepositoryStatus -repoName $repoName -status "Error"
+            Stop-Job -Job $job
+            Remove-Job -Job $job
+            $jobsToRemove += $entry.Key
+        }
+    }
+    
+    # Remove completed/failed/timed out jobs
+    foreach ($key in $jobsToRemove) {
+        $script:runningJobs.Remove($key)
+    }
+    
+    # Hide progress if no jobs are running
+    if ($script:runningJobs.Count -eq 0) {
+        Show-Progress $false
+    }
+}
+
+# Timer for periodic sync
+$timer = New-Object System.Windows.Forms.Timer
+$timer.Interval = $config.SyncInterval * 1000  # Convert to milliseconds
+
+# Add countdown timer
+$countdownTimer = New-Object System.Windows.Forms.Timer
+$countdownTimer.Interval = 1000  # Update every second
+$script:nextSyncTime = $null
+
+# Add job monitor timer
+$jobMonitorTimer = New-Object System.Windows.Forms.Timer
+$jobMonitorTimer.Interval = 1000  # Check jobs every second
+$jobMonitorTimer.Add_Tick({
+    Start-JobMonitor
+})
+
+$countdownTimer.Add_Tick({
+    if ($script:nextSyncTime) {
+        $timeLeft = $script:nextSyncTime - (Get-Date)
+        if ($timeLeft.TotalSeconds -gt 0) {
+            $statusLabel.Text = "Next sync in: $([Math]::Floor($timeLeft.TotalSeconds)) seconds"
+        }
+    }
+})
+
+# Add timer tick handler
+$timer.Add_Tick({
+    Write-Verbose "Timer tick: Starting periodic sync"
+    $script:nextSyncTime = (Get-Date).AddSeconds($config.SyncInterval)
+    $selectedRepos = Get-SelectedRepositories
+    
+    foreach ($repoName in $selectedRepos) {
+        # Skip if a sync is already in progress for this repo
+        if ($script:runningJobs.Keys | Where-Object { $_ -like "*Sync $repoName" }) {
+            Write-Verbose "Skipping $repoName - sync already in progress"
+            continue
+        }
+        Start-RepositoryJob -RepoName $repoName
+    }
+})
+
+# Update status strip with next sync time
+function Update-StatusStrip {
+    $script:nextSyncTime = (Get-Date).AddSeconds($config.SyncInterval)
+    $statusLabel.Text = "Next sync in: $($config.SyncInterval) seconds"
+}
+
+# Start button click handler with verbose logging
+$startButton.Add_Click({
+    $selectedRepos = Get-SelectedRepositories
+    if ($selectedRepos.Count -eq 0) {
+        [System.Windows.Forms.MessageBox]::Show("Please select at least one repository to monitor.", "No Repositories Selected", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Warning)
+        return
+    }
+    
+    $timer.Start()
+    $countdownTimer.Start()
+    $jobMonitorTimer.Start()
+    $startButton.Enabled = $false
+    $stopButton.Enabled = $true
+    Log-Message "Started monitoring selected repositories"
+    Update-StatusStrip
+    
+    Write-Verbose "Performing initial sync"
+    # Clear any existing jobs before starting new ones
+    $script:runningJobs.Keys | ForEach-Object {
+        $job = $script:runningJobs[$_].Job
+        if ($job) {
+            Stop-Job -Job $job -ErrorAction SilentlyContinue
+            Remove-Job -Job $job -ErrorAction SilentlyContinue
+        }
+    }
+    $script:runningJobs.Clear()
+    
+    $selectedRepos | ForEach-Object {
+        Start-RepositoryJob -RepoName $_
+    }
+})
+
+# Stop button click handler
+$stopButton.Add_Click({
+    Write-Verbose "Stop button clicked - stopping sync operations"
+    $timer.Stop()
+    $countdownTimer.Stop()
+    $jobMonitorTimer.Stop()
+    $startButton.Enabled = $true
+    $stopButton.Enabled = $false
+    
+    # Stop and remove all running jobs
+    $script:runningJobs.Keys | ForEach-Object {
+        $job = $script:runningJobs[$_].Job
+        if ($job) {
+            Stop-Job -Job $job -ErrorAction SilentlyContinue
+            Remove-Job -Job $job -ErrorAction SilentlyContinue
+        }
+    }
+    $script:runningJobs.Clear()
+    
+    $statusLabel.Text = "Monitoring stopped"
+    $script:nextSyncTime = $null
+    Log-Message "Stopped monitoring repositories"
+})
+
+# Clear button click handler
+$clearButton.Add_Click({
+    $statusBox.Clear()
+    $statusLabel.Text = "Log cleared"
+})
+
+# Form closing handler
+$form.Add_FormClosing({
+    if ($timer) {
+        $timer.Stop()
+        $timer.Dispose()
+    }
+    if ($countdownTimer) {
+        $countdownTimer.Stop()
+        $countdownTimer.Dispose()
+    }
+    if ($jobMonitorTimer) {
+        $jobMonitorTimer.Stop()
+        $jobMonitorTimer.Dispose()
+    }
+    if ($testTimer) {
+        $testTimer.Stop()
+        $testTimer.Dispose()
+    }
+})
 
 # Check dependencies before starting
 function Test-Dependencies {
