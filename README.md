@@ -37,29 +37,44 @@ cd "Git Loop"
 
 ## 🧪 Testing Background Sync
 
-1. Start Git Loop:
+1. Start Git Loop with verbose logging:
 ```powershell
-.\Git_Loop.ps1
+.\Git_Loop.ps1 -Verbose
 ```
 
 2. Test the background sync:
    - Select one or more repositories in the list
    - Click "Start" to begin monitoring
-   - Watch the status strip at the bottom - it shows when the next sync will occur
-   - Wait for 30 seconds (default sync interval)
-   - You should see new sync operations start automatically
-   - The status indicators will update for each repository
+   - You should see "Started monitoring selected repositories" in the log
+   - The status strip at the bottom will show the next sync time
+   - Initial sync will begin immediately
+   - Every 30 seconds, new sync operations will start automatically
+   - Watch the verbose output for "Timer tick: Starting periodic sync" messages
 
 3. Verify sync is working:
-   - Make changes in one of the monitored repositories
-   - Wait for the next sync interval
-   - Git Loop should automatically detect and sync the changes
-   - Check the status box for sync confirmation messages
+   - Make a small change in one of the monitored repositories (e.g., edit a file)
+   - Wait for the next sync interval (watch the status strip)
+   - Git Loop should detect and sync the changes
+   - The repository's status icon will update during sync
+   - Check the log box for sync confirmation messages
 
-4. Adjust sync interval (optional):
+4. Test stopping and restarting:
+   - Click "Stop" to pause monitoring
+   - Status strip will show "Monitoring stopped"
+   - All running sync jobs will be cleaned up
+   - Click "Start" to resume monitoring
+   - Background sync should continue every 30 seconds
+
+5. Troubleshooting:
+   - If syncs aren't running, check the verbose output
+   - Ensure the repositories are properly selected
+   - Verify the status strip is showing next sync time
+   - Try stopping and restarting the monitoring
+
+6. Adjust sync interval (optional):
    - Open the `config` file
-   - Modify the "SyncInterval" value (in seconds)
-   - Restart Git Loop for changes to take effect
+   - Change "SyncInterval" to desired seconds (e.g., 10 for testing)
+   - Save and restart Git Loop
 
 ## 🛠️ Configuration
 
