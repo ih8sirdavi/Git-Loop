@@ -829,143 +829,6 @@ $clearButton.FlatAppearance.MouseOverBackColor = $theme.ButtonHover
 $statusStrip.BackColor = $theme.Background
 $statusLabel.ForeColor = $theme.TextSecondary
 
-# Initialize script-level variables
-$script:runningJobs = @{}
-$script:syncTimer = $null
-$script:testTimer = $null
-$script:monitoring = $false
-$script:currentTheme = "Light"
-
-# Theme definitions
-$script:themes = @{
-    "Light" = @{
-        Background = [System.Drawing.Color]::White
-        TextPrimary = [System.Drawing.Color]::Black
-        TextSecondary = [System.Drawing.Color]::Gray
-        ButtonBackground = [System.Drawing.Color]::WhiteSmoke
-        ButtonBorder = [System.Drawing.Color]::FromArgb(200, 200, 200)
-        ButtonHover = [System.Drawing.Color]::FromArgb(230, 230, 230)
-    }
-    "Dark" = @{
-        Background = [System.Drawing.Color]::FromArgb(45, 45, 45)
-        TextPrimary = [System.Drawing.Color]::WhiteSmoke
-        TextSecondary = [System.Drawing.Color]::LightGray
-        ButtonBackground = [System.Drawing.Color]::FromArgb(60, 60, 60)
-        ButtonBorder = [System.Drawing.Color]::FromArgb(100, 100, 100)
-        ButtonHover = [System.Drawing.Color]::FromArgb(75, 75, 75)
-    }
-}
-
-# Stop button click handler
-$stopButton.Add_Click({
-    Write-Verbose "Stop button clicked"
-    $script:monitoring = $false
-    
-    # Stop all running jobs
-    if ($script:runningJobs -and $script:runningJobs.Count -gt 0) {
-        $script:runningJobs.Keys | ForEach-Object {
-            $job = $script:runningJobs[$_].Job
-            if ($job) {
-                Write-Verbose "Stopping job for repository: $_"
-                Stop-Job -Job $job -ErrorAction SilentlyContinue
-                Remove-Job -Job $job -Force -ErrorAction SilentlyContinue
-            }
-        }
-        $script:runningJobs.Clear()
-    }
-    
-    # Stop and dispose timers
-    if ($script:syncTimer) {
-        $script:syncTimer.Stop()
-        $script:syncTimer.Dispose()
-        $script:syncTimer = $null
-    }
-    if ($script:testTimer) {
-        $script:testTimer.Stop()
-        $script:testTimer.Dispose()
-        $script:testTimer = $null
-    }
-    
-    # Update UI
-    Update-UI {
-        $startButton.Enabled = $true
-        $stopButton.Enabled = $false
-        $statusLabel.Text = "Monitoring stopped"
-        $progressBar.Visible = $false
-    }
-    
-    Log-Message "Stopped monitoring repositories"
-})
-
-# Start button click handler
-$startButton.Add_Click({
-    Write-Verbose "Start button clicked"
-    $script:monitoring = $true
-    $script:runningJobs.Clear()
-    
-    # Get selected repositories
-    $selectedRepos = @()
-    $repoListView.Items | Where-Object { $_.Checked } | ForEach-Object {
-        $selectedRepos += $_.Text
-        Log-Message "Repository $($_.Text) added to sync list" -repository $_.Text
-    }
-    
-    if ($selectedRepos.Count -eq 0) {
-        [System.Windows.Forms.MessageBox]::Show(
-            "Please select at least one repository to monitor.",
-            "No Repositories Selected",
-            [System.Windows.Forms.MessageBoxButtons]::OK,
-            [System.Windows.Forms.MessageBoxIcon]::Warning
-        )
-        return
-    }
-    
-    # Update UI
-    Update-UI {
-        $startButton.Enabled = $false
-        $stopButton.Enabled = $true
-        $statusLabel.Text = "Monitoring repositories..."
-        $progressBar.Visible = $true
-    }
-    
-    Log-Message "Started monitoring selected repositories"
-    
-    # Start initial sync for selected repositories
-    $selectedRepos | ForEach-Object {
-        Start-RepositoryJob -RepoName $_
-    }
-    
-    # Create and start the sync timer
-    $script:syncTimer = New-Object System.Windows.Forms.Timer
-    $script:syncTimer.Interval = $config.SyncInterval * 1000
-    $script:syncTimer.Add_Tick({
-        if (-not $script:monitoring) { return }
-        
-        $selectedRepos | ForEach-Object {
-            # Skip if a sync is already in progress for this repo
-            if ($script:runningJobs.ContainsKey($_)) {
-                Write-Verbose "Skipping $_ - sync already in progress"
-                continue
-            }
-            Start-RepositoryJob -RepoName $_
-        }
-    })
-    $script:syncTimer.Start()
-    
-    # Start the test timer if enabled
-    if ($config.TestMode) {
-        $script:testTimer = New-Object System.Windows.Forms.Timer
-        $script:testTimer.Interval = 5000  # 5 seconds
-        $script:testTimer.Add_Tick({
-            Write-Verbose "Test timer tick"
-            Update-UI {
-                $statusLabel.Text = "Test Mode: $(Get-Date -Format 'HH:mm:ss')"
-            }
-        })
-        $script:testTimer.Start()
-    }
-})
-
 # Function to update repository details with better formatting
 function Update-RepositoryDetails {
     param(
@@ -1103,12 +966,12 @@ function Sync-GitRepository {
         Retry-Operation -Operation {
             $output = git fetch origin $repo.Branch 2>&1
             if ($LASTEXITCODE -ne 0) {
-                # Only throw if it's a real error, not just fetch info or CRLF warnings
+                # Only throw if it's a real error, not just fetch info output or CRLF warnings
                 $errorOutput = $output | Where-Object { 
                     $_ -notmatch '^From ' -and 
                     $_ -notmatch '^\* \[new branch\]' -and
-                    $_ -notmatch 'warning: .+ will be replaced by CRLF' -and
-                    $_ -notmatch 'warning: in the working copy of'
+                    $_ -notmatch 'warning: .+ LF will be replaced by CRLF' -and
+                    $_ -notmatch 'warning: in the working copy of .+, CRLF will be replaced by LF'
                 }
                 if ($errorOutput) {
                     throw "Failed to fetch from remote: $errorOutput"
@@ -1123,9 +986,9 @@ function Sync-GitRepository {
             Retry-Operation -Operation {
                 $output = git add -A 2>&1
                 if ($LASTEXITCODE -ne 0) {
-                    $errorOutput = $output | Where-Object { 
-                        $_ -notmatch 'warning: .+ will be replaced by CRLF' -and
-                        $_ -notmatch 'warning: in the working copy of'
+                    $errorOutput = $output | Where-Object {
+                        $_ -notmatch 'warning: .+ LF will be replaced by CRLF' -and
+                        $_ -notmatch 'warning: in the working copy of .+, CRLF will be replaced by LF'
                     }
                     if ($errorOutput) {
                         throw "Failed to stage changes: $errorOutput"
@@ -1137,9 +1000,9 @@ function Sync-GitRepository {
             Retry-Operation -Operation {
                 $output = git commit -m "Auto-commit: Local changes" 2>&1
                 if ($LASTEXITCODE -ne 0) {
-                    $errorOutput = $output | Where-Object { 
-                        $_ -notmatch 'warning: .+ will be replaced by CRLF' -and
-                        $_ -notmatch 'warning: in the working copy of'
+                    $errorOutput = $output | Where-Object {
+                        $_ -notmatch 'warning: .+ LF will be replaced by CRLF' -and
+                        $_ -notmatch 'warning: in the working copy of .+, CRLF will be replaced by LF'
                     }
                     if ($errorOutput) {
                         throw "Failed to commit changes: $errorOutput"
@@ -1152,9 +1015,9 @@ function Sync-GitRepository {
         Retry-Operation -Operation {
             $output = git pull --rebase origin $repo.Branch 2>&1
             if ($LASTEXITCODE -ne 0) {
-                $errorOutput = $output | Where-Object { 
-                    $_ -notmatch 'warning: .+ will be replaced by CRLF' -and
-                    $_ -notmatch 'warning: in the working copy of'
+                $errorOutput = $output | Where-Object {
+                    $_ -notmatch 'warning: .+ LF will be replaced by CRLF' -and
+                    $_ -notmatch 'warning: in the working copy of .+, CRLF will be replaced by LF'
                 }
                 if ($errorOutput) {
                     throw "Failed to pull changes: $errorOutput"
@@ -1166,9 +1029,9 @@ function Sync-GitRepository {
         Retry-Operation -Operation {
             $output = git push origin $repo.Branch 2>&1
             if ($LASTEXITCODE -ne 0) {
-                $errorOutput = $output | Where-Object { 
-                    $_ -notmatch 'warning: .+ will be replaced by CRLF' -and
-                    $_ -notmatch 'warning: in the working copy of'
+                $errorOutput = $output | Where-Object {
+                    $_ -notmatch 'warning: .+ LF will be replaced by CRLF' -and
+                    $_ -notmatch 'warning: in the working copy of .+, CRLF will be replaced by LF'
                 }
                 if ($errorOutput) {
                     throw "Failed to push changes: $errorOutput"
@@ -1177,11 +1040,9 @@ function Sync-GitRepository {
         } -OperationName "git push" -Repository $repoName
         
         Log-Message "Successfully synced repository" -repository $repoName
-        Update-RepositoryStatus -repoName $repoName -status "Success"
     }
     catch {
         Log-Error "Error syncing repository: $_" -repository $repoName -errorRecord $_
-        Update-RepositoryStatus -repoName $repoName -status "Error"
         throw
     }
     finally {
@@ -1346,7 +1207,89 @@ function Update-StatusStrip {
     $statusLabel.Text = "Next sync in: $($config.SyncInterval) seconds"
 }
 
-# Function to check dependencies before starting
+# Start button click handler with verbose logging
+$startButton.Add_Click({
+    $selectedRepos = Get-SelectedRepositories
+    if ($selectedRepos.Count -eq 0) {
+        [System.Windows.Forms.MessageBox]::Show("Please select at least one repository to monitor.", "No Repositories Selected", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Warning)
+        return
+    }
+    
+    $timer.Start()
+    $countdownTimer.Start()
+    $jobMonitorTimer.Start()
+    $startButton.Enabled = $false
+    $stopButton.Enabled = $true
+    Log-Message "Started monitoring selected repositories"
+    Update-StatusStrip
+    
+    Write-Verbose "Performing initial sync"
+    # Clear any existing jobs before starting new ones
+    $script:runningJobs.Keys | ForEach-Object {
+        $job = $script:runningJobs[$_].Job
+        if ($job) {
+            Stop-Job -Job $job -ErrorAction SilentlyContinue
+            Remove-Job -Job $job -ErrorAction SilentlyContinue
+        }
+    }
+    $script:runningJobs.Clear()
+    
+    $selectedRepos | ForEach-Object {
+        Start-RepositoryJob -RepoName $_
+    }
+})
+
+# Stop button click handler
+$stopButton.Add_Click({
+    Write-Verbose "Stop button clicked - stopping sync operations"
+    $timer.Stop()
+    $countdownTimer.Stop()
+    $jobMonitorTimer.Stop()
+    $startButton.Enabled = $true
+    $stopButton.Enabled = $false
+    
+    # Stop and remove all running jobs
+    $script:runningJobs.Keys | ForEach-Object {
+        $job = $script:runningJobs[$_].Job
+        if ($job) {
+            Stop-Job -Job $job -ErrorAction SilentlyContinue
+            Remove-Job -Job $job -ErrorAction SilentlyContinue
+        }
+    }
+    $script:runningJobs.Clear()
+    
+    $statusLabel.Text = "Monitoring stopped"
+    $script:nextSyncTime = $null
+    Log-Message "Stopped monitoring repositories"
+})
+
+# Clear button click handler
+$clearButton.Add_Click({
+    $statusBox.Clear()
+    $statusLabel.Text = "Log cleared"
+})
+
+# Form closing handler
+$form.Add_FormClosing({
+    if ($timer) {
+        $timer.Stop()
+        $timer.Dispose()
+    }
+    if ($countdownTimer) {
+        $countdownTimer.Stop()
+        $countdownTimer.Dispose()
+    }
+    if ($jobMonitorTimer) {
+        $jobMonitorTimer.Stop()
+        $jobMonitorTimer.Dispose()
+    }
+    if ($testTimer) {
+        $testTimer.Stop()
+        $testTimer.Dispose()
+    }
+})
+
+# Check dependencies before starting
 function Test-Dependencies {
     Write-Verbose "Checking dependencies..."
     
