@@ -1001,6 +1001,23 @@ function Start-JobMonitor {
 $timer = New-Object System.Windows.Forms.Timer
 $timer.Interval = $config.SyncInterval * 1000  # Convert to milliseconds
 
+# Add timer tick handler
+$timer.Add_Tick({
+    Write-Verbose "Timer tick: Starting periodic sync"
+    $selectedRepos = Get-SelectedRepositories
+    
+    foreach ($repoName in $selectedRepos) {
+        # Skip if a sync is already in progress for this repo
+        if ($script:runningJobs.Keys | Where-Object { $_ -like "*Sync $repoName" }) {
+            Write-Verbose "Skipping $repoName - sync already in progress"
+            continue
+        }
+        Start-AsyncOperation -OperationName "Sync $repoName" -RepoName $repoName
+    }
+    
+    Update-StatusStrip
+})
+
 # Update status strip with next sync time
 function Update-StatusStrip {
     $nextSync = (Get-Date).AddSeconds($config.SyncInterval)
@@ -1048,7 +1065,7 @@ $timer.Add_Tick({
             $job = $script:runningJobs[$_].Job
             if ($job) {
                 Stop-Job -Job $job -ErrorAction SilentlyContinue
-                Remove-Job -Job $job -ErrorAction SilentlyContinue
+                Remove-Job -Job $job
             }
             $script:runningJobs.Remove($_)
             Write-Verbose "Removed job for unselected repository: $jobRepoName"
