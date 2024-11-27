@@ -458,6 +458,26 @@ $repoListView.Add_MouseMove({
     }
 })
 
+# Add checkbox change handler for repository list
+$repoListView.Add_ItemCheck({
+    param($sender, $e)
+    $item = $repoListView.Items[$e.Index]
+    $repoName = $item.Text
+    
+    if ($e.NewValue -eq 'Checked') {
+        Write-Verbose "Repository $repoName checked, will be included in next sync"
+        Log-Message "Repository $repoName added to sync list" -type "INFO" -repository $repoName
+        Update-RepositoryStatus -repoName $repoName -status "Pending"
+    } else {
+        Write-Verbose "Repository $repoName unchecked, will be excluded from sync"
+        Log-Message "Repository $repoName removed from sync list" -type "INFO" -repository $repoName
+        Update-RepositoryStatus -repoName $repoName -status "Pending"
+        Update-UI {
+            $statusBox.AppendText("Repository '$repoName' removed from sync list`r`n")
+        }
+    }
+})
+
 # Update sync function to use checked items
 function Get-SelectedRepositories {
     $repoListView.Items | Where-Object { $_.Checked } | ForEach-Object { $_.Text }
