@@ -1,24 +1,80 @@
 # Git Loop
 
+## Project Status
+- **Version**: 1.0.0
+- **Last Updated**: 2024
+- **Status**: Active Development
+
 An automated Git repository synchronization tool that keeps multiple repositories in sync with minimal user intervention.
 
-## Features
+## 🌟 Key Features
 
-- 🔄 Automatic multi-repository synchronization
-- ⚙️ Configurable sync intervals
-- 🔐 Secure SSH authentication
-- 📁 Multiple repository support
-- 📝 Comprehensive logging
-- 🔧 Easy configuration management
+```mermaid
+graph TD
+    A[Git Loop] --> B[Multi-Repo Sync]
+    A --> C[Auto Configuration]
+    A --> D[Secure Auth]
+    A --> E[Logging System]
+    
+    B --> B1[Configurable Intervals]
+    B --> B2[Multiple Repositories]
+    
+    C --> C1[Auto Username Detection]
+    C --> C2[Config Backup]
+    
+    D --> D1[SSH Authentication]
+    D --> D2[No Stored Credentials]
+    
+    E --> E1[Detailed Logging]
+    E --> E2[Config Backups]
+```
 
-## Installation
+- 🔄 **Automatic Synchronization**
+  - Multi-repository support
+  - Configurable sync intervals
+  - Intelligent conflict handling
+
+- 🔐 **Secure Authentication**
+  - SSH key support
+  - No credential storage
+  - User permission based
+
+- 📝 **Smart Configuration**
+  - Auto-detection of Git settings
+  - Configuration backups
+  - Template-based setup
+
+## 🏗 System Architecture
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant GitLoop
+    participant ConfigSystem
+    participant GitOperations
+    participant RemoteRepo
+
+    User->>GitLoop: Start Monitoring
+    GitLoop->>ConfigSystem: Load Configuration
+    ConfigSystem-->>GitLoop: Config Loaded
+    
+    loop Every SyncInterval
+        GitLoop->>GitOperations: Check Repository Status
+        GitOperations->>RemoteRepo: Fetch Changes
+        RemoteRepo-->>GitOperations: Return Status
+        GitOperations-->>GitLoop: Status Update
+        GitLoop->>User: Update UI
+    end
+```
+
+## 📦 Installation
 
 1. Clone this repository:
 ```powershell
 git clone git@github.com:ih8sirdavi/Git-Loop.git
 ```
 
-2. Ensure you have the required dependencies:
+2. Ensure prerequisites:
    - Git installed and configured
    - PowerShell 5.1 or later
    - .NET Framework 4.5+
@@ -28,15 +84,25 @@ git clone git@github.com:ih8sirdavi/Git-Loop.git
 .\Git_Loop.ps1
 ```
 
-On first run, the script will:
-- Detect your Git username
-- Create initial configuration
-- Set up logging directory
-- Initialize Git ignore rules
+### First Run Process
 
-## Configuration
+```mermaid
+graph TD
+    Start[Start Script] --> Check{Config Exists?}
+    Check -->|No| Init[Initialize Configuration]
+    Init --> Username[Detect Git Username]
+    Username --> SSH[Check SSH Keys]
+    SSH --> Create[Create Config File]
+    Create --> Backup[Create Config Backup]
+    Backup --> Done[Start Monitoring]
+    
+    Check -->|Yes| Load[Load Existing Config]
+    Load --> Backup
+```
 
-The tool uses a JSON configuration file (`config`) with the following structure:
+## ⚙️ Configuration
+
+The tool uses a JSON configuration file with the following structure:
 
 ```json
 {
@@ -57,18 +123,7 @@ The tool uses a JSON configuration file (`config`) with the following structure:
 }
 ```
 
-### Configuration Files
-- `config`: Main configuration file (not tracked in Git)
-- `config.example`: Template configuration (tracked in Git)
-- `logs/config.backup`: Automatic backup of your configuration
-
-### Configuration Options
-- `SyncInterval`: Time between syncs in seconds
-- `MaxRetries`: Number of retry attempts for failed operations
-- `LogRetention`: Number of log files to keep
-- `MaxLogSize`: Maximum size for log files
-
-## Directory Structure
+### 📁 Directory Structure
 
 ```
 Git Loop/
@@ -81,46 +136,41 @@ Git Loop/
 └── .gitignore       # Git ignore rules
 ```
 
-## Git Ignore Rules
-
-The following paths are automatically ignored:
-- `/logs/` - All log files and configuration backups
-- `/config` - Your personal configuration
-- `/.git/` - Git directory
-
-The `config.example` file is tracked to serve as a template for new users.
-
-## Usage
-
-1. Fork the repository
-2. Configure your repositories in the config file
-3. Run the script:
-   ```powershell
-   .\Git_Loop.ps1 -Verbose  # For detailed logging
-   ```
-
-The script will:
-- Load your configuration
-- Create a backup in logs/config.backup
-- Start monitoring your repositories
-- Automatically sync changes
-
-## Security
+## 🔒 Security
 
 - Uses SSH for authentication
 - No credentials stored in script
 - Runs with your Git permissions
 - Configuration files not tracked in Git
 
-## Troubleshooting
+## 🔍 Troubleshooting
 
-If you encounter issues:
-1. Run with `-Verbose` flag for detailed logging
-2. Check `logs/GitLoop.log` for operation logs
+```mermaid
+graph TD
+    Issue[Issue Detected] --> Check{Check Type}
+    Check -->|Config| Config[Verify Configuration]
+    Check -->|Git| Git[Check Git Setup]
+    Check -->|Auth| Auth[Verify SSH Keys]
+    
+    Config --> Logs[Check Logs]
+    Git --> Logs
+    Auth --> Logs
+    
+    Logs --> Resolution{Fixed?}
+    Resolution -->|No| Support[Create Issue]
+    Resolution -->|Yes| Done[Problem Solved]
+```
+
+1. Run with verbose logging:
+```powershell
+.\Git_Loop.ps1 -Verbose
+```
+
+2. Check logs at `logs/GitLoop.log`
 3. Verify SSH key configuration
 4. Ensure Git is properly configured
 
-## Contributing
+## 🤝 Contributing
 
 1. Fork the repository
 2. Create your feature branch
@@ -128,63 +178,34 @@ If you encounter issues:
 4. Push to the branch
 5. Create a Pull Request
 
-## License
+## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Author
-
-Created by ih8sirdavi
-
-## Acknowledgments
+## 🙏 Acknowledgments
 
 - PowerShell Windows Forms
 - Git command line interface
 - Modern UI design principles
 
-## Cross-Platform Development Plans
+## 🔮 Future Plans
 
-The current PowerShell implementation, while powerful on Windows systems, has platform limitations. Future versions of Git Loop are planned to be reimplemented in cross-platform technologies:
+```mermaid
+gantt
+    title Development Roadmap
+    dateFormat  YYYY-MM-DD
+    section Core Features
+    Cross-Platform Support     :a1, 2024-01-01, 90d
+    Enhanced UI               :a2, after a1, 60d
+    Advanced Git Operations   :a3, after a2, 45d
 
-### Python Implementation
-- **Benefits**
-  - Rich ecosystem of Git libraries (GitPython)
-  - Cross-platform compatibility (Windows, macOS, Linux)
-  - Easy package management with pip
-  - Strong async support with asyncio
-  - GUI options: tkinter, PyQt, or wxPython
+    section Improvements
+    Conflict Resolution      :b1, 2024-01-15, 45d
+    Performance Optimization :b2, after b1, 30d
+    Security Enhancements    :b3, after b2, 30d
+```
 
-### Node.js Implementation
-- **Benefits**
-  - Large ecosystem of Git packages (simple-git, nodegit)
-  - Electron for native-like desktop applications
-  - Cross-platform support
-  - Modern UI frameworks (React, Vue.js)
-  - Strong async capabilities
-  - WebSocket support for real-time updates
-
-### Implementation Priorities
-1. Core Features
-   - Maintain existing functionality
-   - Platform-agnostic configuration
-   - Cross-platform file path handling
-   
-2. UI/UX
-   - Responsive design
-   - Native OS integrations
-   - Consistent experience across platforms
-   
-3. Platform-Specific Features
-   - OS-native notifications
-   - System tray integration
-   - Platform-specific Git credential handling
-
-4. Distribution
-   - Platform-specific installers
-   - Auto-updates
-   - Container support
-
-The cross-platform version will maintain the same core functionality while adding platform-specific optimizations and modern development practices.
+See [Future Enhancements](#future-enhancements) for detailed plans.
 
 ## Future Enhancements
 
