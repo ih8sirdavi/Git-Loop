@@ -251,95 +251,96 @@ The `.gitignore` is configured to maintain a clean repository while developing:
 
 ## 🔄 Version History
 
-- **v1.1.0** (Current)
-  - Added configurable job timeouts
-  - Enhanced error handling and logging
-  - Improved background sync reliability
-  - Added real-time countdown display
+- **v1.1.1** (Current)
+  - **Git Operation Handling**
+    * Improved Git operation output filtering
+    * Properly handle CRLF/LF warnings
+    * Better distinction between warnings and errors
+    * Cleaner log output
+
+  - **Error Handling**
+    * Smarter error detection
+    * Reduced false positive errors
+    * More accurate sync status reporting
+    * Enhanced warning filtering
+
+- **v1.1.0**
+  - **Job Management**
+    * Added configurable job timeouts
+    * Enhanced error handling and logging
+    * Improved background sync reliability
+    * Fixed job monitoring issues
+
+  - **UI Improvements**
+    * Added real-time countdown display
+    * Enhanced status indicators
+    * Better error visibility
+    * Improved log clarity
 
 - **v1.0.0**
-  - Initial release
-  - Basic sync functionality
-  - Repository monitoring
-  - Status tracking
+  - Initial release with basic functionality
 
-## 📋 Planned Features
+## 🔍 Troubleshooting
 
-1. **Core Enhancements**
-   - 🔲 System Tray Integration
-     - Minimize to system tray
-     - Background operation
-     - Tray notifications for sync status
-     - Quick access menu
-   - 🔲 Windows Notifications
-     - Native Windows notification system integration
-     - Configurable alerts for sync, errors, and conflicts
-     - New commit notifications
-   - 🔲 Silent Operation
-     - Command-line parameter for silent startup
-     - Auto-start with Windows
-     - Start minimized to tray option
+### Common Git Messages
 
-2. **Advanced Features**
-   - 🔲 Enhanced UI
-     - Conflict resolution interface
-     - Diff viewer for changes
-     - Remote repository health monitoring
-   - 🔲 Performance Optimization
-     - Parallel repository scanning
-     - Incremental status updates
-     - Memory usage optimization
-   - 🔲 Network Features
-     - Bandwidth throttling
-     - Network-aware sync
-     - Scheduled sync windows
-   - 🔲 Security Enhancements
-     - Credential management
-     - SSH key rotation
-     - Access token management
-     - Audit logging
+Git Loop intelligently handles common Git messages to avoid false error reports:
 
-3. **Future Phases**
-   - 🔲 Cross-platform support (Python/Node.js)
-   - 🔲 Team collaboration features
-   - 🔲 Cloud integration
-   - 🔲 Web interface
+1. **Line Ending Warnings**
+   ```
+   warning: CRLF will be replaced by LF...
+   warning: LF will be replaced by CRLF...
+   ```
+   These are normal Git line ending conversions and not errors.
 
-## 🐞 Recent Bug Fixes & Improvements
+2. **Repository Information**
+   ```
+   From github.com:user/repo
+   * branch main -> FETCH_HEAD
+   ```
+   These are informational messages about fetch operations.
 
-### v1.1.0 (Latest)
-1. Background Sync Enhancements:
-   - Added job monitor timer to check job status every second
-   - Fixed disconnected timer issue with sync function
-   - Improved job tracking and completion detection
-   - Added real-time countdown display
+3. **Branch Updates**
+   ```
+   * [new branch]  main -> main
+   ```
+   Normal branch tracking information.
 
-2. Error Handling Improvements:
-   - Fixed false positive errors from git fetch output
-   - Better distinction between informational git messages and actual errors
-   - More detailed error logging for troubleshooting
-   - Improved error messages in status display
+### Real Error Examples
 
-3. Timer Management:
-   - Synchronized all timers (sync, countdown, job monitor)
-   - Proper cleanup of timers on application close
-   - Better handling of timer state during start/stop
+These are examples of actual errors that require attention:
 
-4. UI Improvements:
-   - Added real-time sync countdown display
-   - Better status indicators for sync operations
-   - Clearer error messages in status box
+1. **Authentication Issues**
+   ```
+   fatal: Authentication failed for 'https://github.com/...'
+   ```
 
-### Known Issues
-- Git fetch output may appear in error logs from previous versions
-- Multiple rapid start/stop actions may need a restart to reset timers
-- Status updates might lag slightly during heavy sync operations
+2. **Network Problems**
+   ```
+   fatal: unable to access 'https://github.com/...': Could not resolve host
+   ```
 
-### Upcoming Features
-- Configurable job timeout settings
-- More detailed job progress reporting
-- Enhanced error recovery mechanisms
-- UI improvements for sync status display
+3. **Merge Conflicts**
+   ```
+   error: could not apply... conflict
+   ```
+
+### Error Resolution
+
+1. **Authentication Errors**
+   - Verify Git credentials
+   - Check SSH keys if using SSH
+   - Update stored credentials
+
+2. **Network Issues**
+   - Check internet connection
+   - Verify proxy settings
+   - Test repository access
+
+3. **Merge Conflicts**
+   - Manually resolve conflicts
+   - Reset local changes if needed
+   - Contact repository owner
 
 ## ⚖️ License
 
