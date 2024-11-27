@@ -979,14 +979,6 @@ function Update-StatusStrip {
     $statusLabel.Text = "Next sync at: $($nextSync.ToString('HH:mm:ss'))"
 }
 
-# Timer tick handler with verbose logging
-$timer.Add_Tick({
-    $selectedRepos = Get-SelectedRepositories
-    foreach ($repo in $selectedRepos) {
-        Start-AsyncOperation -OperationName "Sync $repo" -RepoName $repo
-    }
-})
-
 # Start button click handler with verbose logging
 $startButton.Add_Click({
     $selectedRepos = Get-SelectedRepositories
@@ -1001,8 +993,46 @@ $startButton.Add_Click({
     Log-Message "Started monitoring selected repositories"
     
     Write-Verbose "Performing initial sync"
+    # Clear any existing jobs before starting new ones
+    $script:runningJobs.Keys | ForEach-Object {
+        $job = $script:runningJobs[$_].Job
+        if ($job) {
+            Stop-Job -Job $job -ErrorAction SilentlyContinue
+            Remove-Job -Job $job -ErrorAction SilentlyContinue
+        }
+    }
+    $script:runningJobs.Clear()
+    
     $selectedRepos | ForEach-Object {
         Start-AsyncOperation -OperationName "Initial Sync $_" -RepoName $_
+    }
+})
+
+# Timer tick handler with verbose logging
+$timer.Add_Tick({
+    # Get currently selected repositories
+    $selectedRepos = Get-SelectedRepositories
+    
+    # Remove any running jobs for unselected repositories
+    $script:runningJobs.Keys | Where-Object {
+        $jobRepoName = $_ -replace '^(?:Initial )?Sync (.+)$','$1'
+        if ($jobRepoName -notin $selectedRepos) {
+            $job = $script:runningJobs[$_].Job
+            if ($job) {
+                Stop-Job -Job $job -ErrorAction SilentlyContinue
+                Remove-Job -Job $job -ErrorAction SilentlyContinue
+            }
+            $script:runningJobs.Remove($_)
+            Write-Verbose "Removed job for unselected repository: $jobRepoName"
+        }
+    }
+    
+    # Start sync for selected repositories
+    foreach ($repo in $selectedRepos) {
+        # Only start a new job if there isn't already one running for this repo
+        if (-not ($script:runningJobs.Keys | Where-Object { $_ -like "*Sync $repo" })) {
+            Start-AsyncOperation -OperationName "Sync $repo" -RepoName $repo
+        }
     }
 })
 
