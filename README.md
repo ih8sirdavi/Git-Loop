@@ -1,135 +1,43 @@
 # Git Loop (PowerShell)
 
-## Project Status
-- **Version**: 0.1.0-alpha
-- **Last Updated**: 2024
-- **Platform**: Windows-only (Currently)
-- **Status**: Personal Development Tool
-- **Auto-Commit**: Testing Git Loop signature functionality
+> A PowerShell-based Git repository synchronization tool that automatically monitors and syncs changes across multiple repositories.
 
-> **Note**: This is the first iteration of Git Loop, currently designed as a Windows-specific PowerShell tool for personal use. Future versions will expand into a full-featured, cross-platform team development solution.
+## 🚀 Features
 
-A PowerShell-based Git repository synchronization tool that automatically commits and syncs changes across multiple repositories. Each commit is tagged with "Git Loop (PowerShell)" for easy identification.
+- 🔄 Real-time repository monitoring
+- ✅ Dynamic repository selection (check/uncheck during runtime)
+- 📊 Detailed repository status and sync information
+- 🔍 Visual status indicators for each repository
+- 📝 Comprehensive logging system
+- ⚡ Asynchronous operations with progress tracking
+- 🛡️ Error handling with automatic retries
+- 🎨 Modern UI with light/dark theme support
 
-## 🔍 Commit Identification
+## ⚙️ Requirements
 
-```powershell
-# Example Git Loop commit message:
-Git Loop (PowerShell) - Auto-sync
-
-- Repository: Git Loop
-- Timestamp: 2024-01-XX HH:mm:ss
-- Branch: main
-```
-
-### Verification Process
-The program can verify its own commits by:
-1. Checking commit message prefix "Git Loop (PowerShell)"
-2. Validating commit structure
-3. Confirming repository and branch details
-
-```mermaid
-graph TD
-    A[Check Commit] --> B{Has Git Loop Signature?}
-    B -->|Yes| C[Parse Details]
-    B -->|No| D[Manual Commit]
-    
-    C --> E{Valid Format?}
-    E -->|Yes| F[Git Loop Commit]
-    E -->|No| D
-```
-
-## 🎯 Current Scope
-
-```mermaid
-graph TD
-    A[Git Loop v0.1.0] --> B[Windows Only]
-    A --> C[PowerShell Based]
-    A --> D[Personal Use]
-    
-    B --> B1[PowerShell 5.1+]
-    B --> B2[Windows Path Support]
-    
-    C --> C1[Automatic Commits]
-    C --> C2[Git Integration]
-    
-    D --> D1[Single User Focus]
-    D --> D2[Local Config]
-```
-
-- 🪟 **Windows-Specific Features**
-  - PowerShell automation
-  - Windows path handling
-  - Local system integration
-
-- 🔄 **Current Capabilities**
-  - Automatic commits with "Git Loop (PowerShell)" signature
-  - Basic multi-repository sync
-  - Local configuration management
-
-- 🏠 **Personal Use Focus**
-  - Single user workflow
-  - Local system optimization
-  - Personal repository management
-
-## 🚀 Vision & Roadmap
-
-```mermaid
-gantt
-    title Development Evolution
-    dateFormat  YYYY-MM-DD
-    section Phase 1 (Current)
-    Windows PowerShell Tool    :active, a1, 2024-01-01, 90d
-    Personal Use Optimization  :active, a2, 2024-01-01, 90d
-
-    section Phase 2
-    Cross-Platform Core       :b1, after a1, 120d
-    Team Features            :b2, after a1, 90d
-    Cloud Integration        :b3, after b2, 60d
-
-    section Phase 3
-    Enterprise Features      :c1, after b1, 180d
-    Advanced Workflows       :c2, after b3, 90d
-```
-
-### Future Evolution
-1. **Phase 1 (Current)**
-   - ✅ Windows PowerShell implementation
-   - ✅ Personal workflow optimization
-   - ✅ Basic repository synchronization
-
-2. **Phase 2 (Planned)**
-   - 🔲 Cross-platform support (Python/Node.js)
-   - 🔲 Team collaboration features
-   - 🔲 Cloud integration
-   - 🔲 Web interface
-
-3. **Phase 3 (Future)**
-   - 🔲 Enterprise-grade features
-   - 🔲 Team permission management
-   - 🔲 Advanced workflow automation
-   - 🔲 CI/CD integration
-
-## ⚙️ Current Setup (Windows)
-
-### Prerequisites
 - Windows 10/11
 - PowerShell 5.1 or later
 - Git for Windows
 - .NET Framework 4.5+
+- SSH key configured for GitHub
 
-### Installation
+## 📥 Installation
+
+1. Clone the repository:
 ```powershell
-# Clone to your Windows system
 git clone git@github.com:ih8sirdavi/Git-Loop.git
 cd "Git Loop"
+```
 
-# Run the PowerShell script
+2. Run the PowerShell script:
+```powershell
 .\Git_Loop.ps1
 ```
 
-### Configuration
-Windows-specific configuration file (`config`):
+## 🛠️ Configuration
+
+The configuration file (`config`) is automatically created on first run:
+
 ```json
 {
     "Repositories": [
@@ -145,64 +53,96 @@ Windows-specific configuration file (`config`):
     "MaxRetries": 3,
     "LogRetention": 100,
     "LogFile": "GitLoop.log",
-    "MaxLogSize": "5MB"
+    "MaxLogSize": "5MB",
+    "Theme": "Light"
 }
 ```
 
-### Windows Directory Structure
+## 📁 Directory Structure
+
 ```
 Git Loop/
-├── Git_Loop.ps1      # PowerShell main script
-├── config            # Windows-specific configuration
+├── Git_Loop.ps1      # Main script
+├── config            # User configuration
 ├── config.example    # Configuration template
-├── logs/            # Windows log directory
-│   ├── GitLoop.log   # Operation logs
+├── .gitignore       # Git ignore rules
+├── logs/            # Log directory
+│   ├── GitLoop.log  # Operation logs
 │   └── config.backup # Configuration backup
-└── .gitignore       # Git ignore rules
+├── dev/             # Development workspace (git-ignored)
+└── docs/            # Documentation
+    └── planning/    # Future planning (git-ignored)
 ```
 
-## 🔍 Current Limitations
+## 🔧 Development
 
-- Windows-only support
-- PowerShell dependency
-- Single user focus
-- Basic authentication
-- Local configuration only
+### Development Workspace
+- Use `/dev` directory for new feature development
+- Place planning documents in `/docs/planning`
+- Use appropriate file extensions for different types of files:
+  - `*.dev.*` - Development files
+  - `*.test.*` - Test files
+  - `*.local.*` - Local configuration
+  - `*_wip.*` - Work in progress
+  - `*_draft.*` - Draft files
 
-## 🛠 Development Notes
+### Git Ignore Rules
+The `.gitignore` is configured to maintain a clean repository while developing:
+- Ignores development and planning directories
+- Excludes temporary and backup files
+- Ignores IDE/editor specific files
+- Preserves core functionality files
 
-### Current Implementation
-- PowerShell-based automation
-- Windows file system integration
-- Local Git operations
-- Single user authentication
-- Basic error handling
+## 🤝 Contributing
 
-### Commit Signatures
-All automatic commits are tagged with:
-```
-Git Loop (PowerShell) - [Operation Type]
-```
+1. Fork the repository
+2. Create your feature branch
+3. Make your changes
+4. Submit a pull request
 
-Example commit messages:
-- "Git Loop (PowerShell) - Auto-sync repository"
-- "Git Loop (PowerShell) - Configuration backup"
-- "Git Loop (PowerShell) - Log rotation"
+## 📝 Usage Tips
 
-## 📄 License
+1. **Repository Selection**
+   - Check/uncheck repositories at any time
+   - Status updates appear in real-time
+   - Visual indicators show sync status
+
+2. **Monitoring**
+   - Start/Stop monitoring with dedicated buttons
+   - View detailed repository information
+   - Check sync status and last commit details
+
+3. **Logs**
+   - View operation logs in the status window
+   - Detailed logs saved in `logs/GitLoop.log`
+   - Configuration backups maintained automatically
+
+## 🔄 Version History
+
+- **0.1.0-alpha** (Current)
+  - Initial release
+  - Basic sync functionality
+  - Repository monitoring
+  - Status tracking
+
+## 📋 Planned Features
+
+1. **Phase 2**
+   - 🔲 Cross-platform support (Python/Node.js)
+   - 🔲 Team collaboration features
+   - 🔲 Cloud integration
+   - 🔲 Web interface
+
+2. **Phase 3**
+   - 🔲 Enterprise features
+   - 🔲 Team permissions
+   - 🔲 Advanced workflows
+   - 🔲 CI/CD integration
+
+## ⚖️ License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## 👤 Author
+## 🤔 Support
 
-Created by ih8sirdavi for personal Windows development workflow automation.
-
-## 🙏 Acknowledgments
-
-- PowerShell scripting community
-- Git for Windows
-- Windows development tools
-
----
-
-> **Future Updates**: While currently a Windows-specific PowerShell tool, Git Loop is planned to evolve into a comprehensive, cross-platform team development platform. Stay tuned for updates!
+For issues and feature requests, please use the GitHub issues tracker.

@@ -1,12 +1,74 @@
-# Ignore logs directory
+# Git Loop Core
 /logs/
-
-# Ignore main config but not example
 /config
-/config.backup
-
-# Keep config example
 !/config.example
 
-# Ignore Git directory
+# Git directories
 /.git/
+
+# Development and planning files
+/dev/
+/docs/planning/
+*.dev.*
+*.test.*
+*.local.*
+*_wip.*
+*_draft.*
+TODO.md
+NOTES.md
+*.todo
+*.notes
+
+# PowerShell development
+*.ps1.bak
+*.ps1.tmp
+*.psm1.bak
+*.psd1.bak
+*.ps1.old
+*.psm1.old
+*.psd1.old
+
+# IDE and editor files
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+.vs/
+
+# Temporary files
+[Tt]emp/
+*.tmp
+*.temp
+*.bak
+*~
+*.swp
+*.cache
+
+# Windows specific
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Log files (but keep the logs directory structure)
+*.log
+!logs/.gitkeep
+
+# Test files
+/tests/
+*.[Tt]est.*
+*.[Tt]ests.*
+*.[Ss]pec.*
+
+# Documentation drafts
+*.[Dd]raft.*
+*.[Ww]ip.*
+/docs/drafts/
+
+# Keep these files
+!README.md
+!LICENSE
+!CHANGELOG.md
+!CONTRIBUTING.md
