@@ -145,7 +145,8 @@ The configuration file (`config`) is automatically created on first run:
     "LogRetention": 100,
     "LogFile": "GitLoop.log",
     "MaxLogSize": "5MB",
-    "Theme": "Light"
+    "Theme": "Light",
+    "JobTimeoutSeconds": 300
 }
 ```
 
@@ -202,15 +203,29 @@ The `.gitignore` is configured to maintain a clean repository while developing:
    - Start/Stop monitoring with dedicated buttons
    - View detailed repository information
    - Check sync status and last commit details
+   - Jobs automatically timeout after configured duration (default 5 minutes)
 
-3. **Logs**
+3. **Configuration**
+   - Edit `config` file for customization
+   - Set sync interval (default 30 seconds)
+   - Configure job timeout (JobTimeoutSeconds, default 300 seconds)
+   - Adjust log retention and max size
+
+4. **Logs**
    - View operation logs in the status window
    - Detailed logs saved in `logs/GitLoop.log`
    - Configuration backups maintained automatically
+   - Timeout events logged with duration details
 
 ## 🔄 Version History
 
-- **0.1.0-alpha** (Current)
+- **v1.1.0** (Current)
+  - Added configurable job timeouts
+  - Enhanced error handling and logging
+  - Improved background sync reliability
+  - Added real-time countdown display
+
+- **v1.0.0**
   - Initial release
   - Basic sync functionality
   - Repository monitoring

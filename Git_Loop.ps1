@@ -224,6 +224,50 @@ function Test-GitSshKey {
     return $testResult -like "*successfully authenticated*"
 }
 
+function Update-ConfigurationWithDefaults {
+    param (
+        [Parameter(Mandatory=$true)]
+        [PSCustomObject]$CurrentConfig,
+        
+        [Parameter(Mandatory=$true)]
+        [string]$ConfigPath
+    )
+    
+    Write-Verbose "Loading default configuration template"
+    $defaultConfig = Get-Content "config.example" | ConvertFrom-Json
+    $updated = $false
+    
+    # Helper function to recursively merge objects
+    function Merge-Objects {
+        param($Current, $Default)
+        
+        $merged = $Current.PSObject.Copy()
+        foreach ($property in $Default.PSObject.Properties) {
+            if (-not $Current.PSObject.Properties[$property.Name]) {
+                Write-Verbose "Adding missing property: $($property.Name)"
+                $merged | Add-Member -MemberType NoteProperty -Name $property.Name -Value $property.Value
+                $updated = $true
+            }
+            elseif ($property.Value -is [PSCustomObject] -and $Current.($property.Name) -is [PSCustomObject]) {
+                $merged.($property.Name) = Merge-Objects $Current.($property.Name) $property.Value
+            }
+        }
+        return $merged
+    }
+    
+    $updatedConfig = Merge-Objects $CurrentConfig $defaultConfig
+    
+    if ($updated) {
+        Write-Verbose "Configuration updated with new properties"
+        $updatedConfig | ConvertTo-Json -Depth 10 | Set-Content $ConfigPath
+        Write-Host "Configuration has been updated with new settings." -ForegroundColor Green
+    } else {
+        Write-Verbose "No configuration updates needed"
+    }
+    
+    return $updatedConfig
+}
+
 if (-not (Test-Path $configPath)) {
     try {
         if (-not (Initialize-Configuration)) {
@@ -240,13 +284,17 @@ if (-not (Test-Path $configPath)) {
 }
 
 try {
-    Write-Verbose "Reading configuration file..."
+    Write-Verbose "Loading configuration from $configPath"
     $config = Get-Content $configPath -Raw | ConvertFrom-Json
     Write-Verbose "Successfully parsed JSON configuration"
     
+    # Update configuration with any new fields from example
+    Write-Verbose "Checking for configuration updates..."
+    $config = Update-ConfigurationWithDefaults -CurrentConfig $config -ConfigPath $configPath
+    
     # Validate required configuration fields
     Write-Verbose "Validating configuration..."
-    $requiredFields = @('Repositories', 'SyncInterval', 'MaxRetries', 'LogRetention', 'LogFile', 'MaxLogSize', 'JobTimeout')
+    $requiredFields = @('Repositories', 'SyncInterval', 'MaxRetries', 'LogRetention', 'LogFile', 'MaxLogSize', 'JobTimeoutSeconds')
     $missingFields = $requiredFields | Where-Object { -not $config.PSObject.Properties.Name.Contains($_) }
     if ($missingFields) {
         throw "Missing required configuration fields: $($missingFields -join ', ')"
@@ -284,7 +332,7 @@ try {
         LogRetention = $config.LogRetention
         LogFile = $config.LogFile
         MaxLogSize = $config.MaxLogSize
-        JobTimeout = $config.JobTimeout
+        JobTimeoutSeconds = $config.JobTimeoutSeconds
     }
     Write-Verbose "Configuration loaded successfully"
     Write-Verbose "Loaded $(($config.Repositories | Measure-Object).Count) repositories"
@@ -334,43 +382,26 @@ function Update-ConfigurationWithDefaults {
     function Merge-Objects {
         param($Current, $Default)
         
-        if ($Default -is [PSCustomObject]) {
-            if ($null -eq $Current) {
-                $Current = [PSCustomObject]@{}
+        $merged = $Current.PSObject.Copy()
+        foreach ($property in $Default.PSObject.Properties) {
+            if (-not $Current.PSObject.Properties[$property.Name]) {
+                Write-Verbose "Adding missing property: $($property.Name)"
+                $merged | Add-Member -MemberType NoteProperty -Name $property.Name -Value $property.Value
                 $updated = $true
             }
-            
-            $Default.PSObject.Properties | ForEach-Object {
-                if ($null -eq $Current.$($_.Name)) {
-                    $Current | Add-Member -NotePropertyName $_.Name -NotePropertyValue (Merge-Objects $null $_.Value)
-                    $updated = $true
-                    Write-Verbose "Added new property: $($_.Name)"
-                } else {
-                    $Current.$($_.Name) = Merge-Objects $Current.$($_.Name) $_.Value
-                }
+            elseif ($property.Value -is [PSCustomObject] -and $Current.($property.Name) -is [PSCustomObject]) {
+                $merged.($property.Name) = Merge-Objects $Current.($property.Name) $property.Value
             }
-            return $Current
-        } elseif ($Default -is [Array]) {
-            if ($null -eq $Current) {
-                $updated = $true
-                return $Default
-            }
-            return $Current
-        } else {
-            if ($null -eq $Current) {
-                $updated = $true
-                return $Default
-            }
-            return $Current
         }
+        return $merged
     }
     
     $updatedConfig = Merge-Objects $CurrentConfig $defaultConfig
     
     if ($updated) {
-        Write-Verbose "Configuration updated with new default values"
+        Write-Verbose "Configuration updated with new properties"
         $updatedConfig | ConvertTo-Json -Depth 10 | Set-Content $ConfigPath
-        Write-Verbose "Updated configuration saved to $ConfigPath"
+        Write-Host "Configuration has been updated with new settings." -ForegroundColor Green
     } else {
         Write-Verbose "No configuration updates needed"
     }
@@ -803,6 +834,33 @@ function Start-AsyncOperation {
             Add-Content -Path $logPath -Value $logEntry
         }
 
+        function Log-Error {
+            param(
+                [string]$message,
+                [string]$repository = "",
+                [System.Management.Automation.ErrorRecord]$errorRecord = $null
+            )
+            
+            $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+            $errorMessage = "[$timestamp][ERROR]"
+            if ($repository) {
+                $errorMessage += "[$repository] "
+            }
+            $errorMessage += $message
+            
+            if ($errorRecord) {
+                $errorMessage += "`nException: $($errorRecord.Exception.Message)"
+                $errorMessage += "`nStack Trace: $($errorRecord.ScriptStackTrace)"
+            }
+            
+            # Write to error log file
+            $errorLogPath = Join-Path $PSScriptRoot "logs\errors.log"
+            Add-Content -Path $errorLogPath -Value $errorMessage
+            
+            # Also log to main log
+            Log-Message $message -repository $repository -type "ERROR"
+        }
+
         function Update-RepositoryStatus {
             param(
                 [string]$repoName,
@@ -954,36 +1012,40 @@ function Start-JobMonitor {
     
     $jobsToRemove = @()
     
-    foreach ($key in $script:runningJobs.Keys) {
-        $jobInfo = $script:runningJobs[$key]
-        $job = $jobInfo.Job
-        $repoName = $key -replace '^.*Sync (.+)$', '$1'
+    foreach ($entry in $script:runningJobs.GetEnumerator()) {
+        $job = $entry.Value.Job
+        $name = $entry.Value.Name
+        $startTime = $entry.Value.StartTime
+        $repoName = $name -replace '^(?:Initial )?Sync (.+)$','$1'
         
-        # Check for job timeout
-        $runTime = (Get-Date) - $jobInfo.StartTime
-        if ($runTime.TotalSeconds -gt $config.JobTimeout) {
-            Write-Verbose "Job $key exceeded timeout of $($config.JobTimeout) seconds"
-            Log-Message "Operation timed out after $($config.JobTimeout) seconds" -type "WARNING" -repository $repoName
-            Stop-Job -Job $job -ErrorAction SilentlyContinue
-            Remove-Job -Job $job -ErrorAction SilentlyContinue
-            Update-RepositoryStatus -repoName $repoName -status "Error"
-            $jobsToRemove += $key
-            continue
+        if ($job.State -eq 'Completed') {
+            try {
+                $result = Receive-Job -Job $job -ErrorAction Stop
+                Log-Message "Operation completed: $name" -type "INFO"
+                Update-RepositoryStatus -repoName $repoName -status "Success"
+                Update-RepositoryDetails $repoName
+            }
+            catch {
+                Log-Error "Operation failed: $_" -repository $repoName -errorRecord $_
+                Update-RepositoryStatus -repoName $repoName -status "Error"
+            }
+            finally {
+                $jobsToRemove += $entry.Key
+                Remove-Job -Job $job
+            }
         }
-
-        # Check job state
-        if ($job.State -eq "Completed") {
-            $result = Receive-Job -Job $job
-            Remove-Job -Job $job
-            Update-RepositoryStatus -repoName $repoName -status "Success"
-            $jobsToRemove += $key
-        }
-        elseif ($job.State -eq "Failed") {
-            $result = Receive-Job -Job $job
-            Remove-Job -Job $job
+        elseif ($job.State -eq 'Failed') {
+            Log-Error "Operation failed" -repository $repoName
             Update-RepositoryStatus -repoName $repoName -status "Error"
-            $jobsToRemove += $key
-            Log-Message "Operation failed" -type "ERROR" -repository $repoName
+            $jobsToRemove += $entry.Key
+            Remove-Job -Job $job
+        }
+        elseif (((Get-Date) - $startTime).TotalSeconds -gt $config.JobTimeoutSeconds) {
+            Log-Error "Operation timed out after $($config.JobTimeoutSeconds) seconds" -repository $repoName
+            Update-RepositoryStatus -repoName $repoName -status "Error"
+            Stop-Job -Job $job
+            Remove-Job -Job $job
+            $jobsToRemove += $entry.Key
         }
     }
     
