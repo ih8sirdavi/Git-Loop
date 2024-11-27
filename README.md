@@ -62,44 +62,60 @@ cd "Git Loop"
    - Click the "Start" button
    - Verify in the log: "Started monitoring selected repositories"
    - Initial sync should begin immediately
-   - Status strip shows countdown timer (30 seconds)
-   - Watch the countdown update every second
-   - Repository icons should change to "Syncing"
+   - Watch for these indicators:
+     * Status strip shows countdown timer (30 seconds)
+     * Repository icons change to "Syncing"
+     * Job monitor starts checking job status (every second)
+     * Verbose log shows "Timer tick" and job status updates
 
-6. Monitor sync countdown:
+6. Monitor sync process:
    - Status strip shows "Next sync in: XX seconds"
    - Counter decrements every second
-   - When counter reaches 0, new sync starts
+   - When counter reaches 0:
+     * New sync jobs start
+     * Job monitor tracks completion
+     * Repository status updates to "Success" when done
+     * Push operations complete automatically
    - Counter resets to 30 (or configured interval)
-   - Repository status updates during sync
 
 7. Test sync detection:
    - Open one of the monitored repositories
    - Make a small change (e.g., edit a text file)
-   - Save the change
+   - Save and commit the change
    - Wait for countdown to reach 0
-   - Verify Git Loop detects and syncs the change
-   - Check status box for sync confirmation
+   - Watch the job monitoring in verbose log:
+     * Job starts for modified repository
+     * Changes are detected and pushed
+     * Status updates to "Success" when complete
+   - Verify changes appear in remote repository
 
 8. Test stop/restart:
    - Click "Stop" button
    - Verify:
      * "Monitoring stopped" in log
      * Countdown timer stops
+     * Job monitor stops
+     * All running jobs clean up
      * Start button becomes enabled
-     * All sync operations clean up
    - Click "Start" to resume
-   - Verify countdown starts from 30 again
+   - Verify all timers restart:
+     * Sync timer (30s intervals)
+     * Countdown timer (1s updates)
+     * Job monitor (1s checks)
 
 9. Common issues:
-   - Countdown not updating:
-     * Check if monitoring is actually started
-     * Try stopping and restarting
-     * Watch verbose output for errors
-   - Sync not running at 0:
-     * Check verbose output for "Timer tick" messages
+   - Changes not pushing:
+     * Check verbose log for job completion
+     * Verify job monitor shows "Operation completed"
+     * Look for any error messages in status box
+   - Sync status not updating:
+     * Ensure job monitor is running (verbose log)
+     * Check for "Timer tick" messages
      * Verify repository selection
-     * Check for running sync jobs in log
+   - Jobs hanging:
+     * Jobs timeout after 5 minutes
+     * Check verbose log for timeout messages
+     * Try stopping and restarting monitoring
 
 10. Adjust sync interval (optional):
     - Open `config` file
@@ -107,7 +123,7 @@ cd "Git Loop"
     - Change to desired seconds (e.g., 10 for testing)
     - Save config file
     - Restart Git Loop completely
-    - Verify countdown starts from new interval
+    - Verify all timers use new interval
 
 ## 🛠️ Configuration
 
