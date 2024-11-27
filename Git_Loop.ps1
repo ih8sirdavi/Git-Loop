@@ -860,9 +860,13 @@ function Start-AsyncOperation {
                 
                 # Fetch latest changes
                 Retry-Operation -Operation {
-                    git fetch origin $repo.Branch
+                    $output = git fetch origin $repo.Branch 2>&1
                     if ($LASTEXITCODE -ne 0) {
-                        throw "Failed to fetch from remote"
+                        # Only throw if it's a real error, not just fetch info output
+                        $errorOutput = $output | Where-Object { $_ -notmatch '^From ' -and $_ -notmatch '^\* \[new branch\]' }
+                        if ($errorOutput) {
+                            throw "Failed to fetch from remote: $errorOutput"
+                        }
                     }
                 } -OperationName "git fetch" -Repository $repoName
                 
