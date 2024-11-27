@@ -5,6 +5,7 @@
 ## 🚀 Features
 
 - 🔄 Real-time repository monitoring
+- 🕒 Automatic background sync every 30 seconds (configurable)
 - ✅ Dynamic repository selection (check/uncheck during runtime)
 - 📊 Detailed repository status and sync information
 - 🔍 Visual status indicators for each repository
@@ -33,6 +34,32 @@ cd "Git Loop"
 ```powershell
 .\Git_Loop.ps1
 ```
+
+## 🧪 Testing Background Sync
+
+1. Start Git Loop:
+```powershell
+.\Git_Loop.ps1
+```
+
+2. Test the background sync:
+   - Select one or more repositories in the list
+   - Click "Start" to begin monitoring
+   - Watch the status strip at the bottom - it shows when the next sync will occur
+   - Wait for 30 seconds (default sync interval)
+   - You should see new sync operations start automatically
+   - The status indicators will update for each repository
+
+3. Verify sync is working:
+   - Make changes in one of the monitored repositories
+   - Wait for the next sync interval
+   - Git Loop should automatically detect and sync the changes
+   - Check the status box for sync confirmation messages
+
+4. Adjust sync interval (optional):
+   - Open the `config` file
+   - Modify the "SyncInterval" value (in seconds)
+   - Restart Git Loop for changes to take effect
 
 ## 🛠️ Configuration
 

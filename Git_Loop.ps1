@@ -1036,6 +1036,7 @@ $startButton.Add_Click({
     $startButton.Enabled = $false
     $stopButton.Enabled = $true
     Log-Message "Started monitoring selected repositories"
+    Update-StatusStrip
     
     Write-Verbose "Performing initial sync"
     # Clear any existing jobs before starting new ones
@@ -1051,6 +1052,27 @@ $startButton.Add_Click({
     $selectedRepos | ForEach-Object {
         Start-AsyncOperation -OperationName "Initial Sync $_" -RepoName $_
     }
+})
+
+# Stop button click handler
+$stopButton.Add_Click({
+    Write-Verbose "Stop button clicked - stopping sync operations"
+    $timer.Stop()
+    $startButton.Enabled = $true
+    $stopButton.Enabled = $false
+    
+    # Stop and remove all running jobs
+    $script:runningJobs.Keys | ForEach-Object {
+        $job = $script:runningJobs[$_].Job
+        if ($job) {
+            Stop-Job -Job $job -ErrorAction SilentlyContinue
+            Remove-Job -Job $job -ErrorAction SilentlyContinue
+        }
+    }
+    $script:runningJobs.Clear()
+    
+    $statusLabel.Text = "Monitoring stopped"
+    Log-Message "Stopped monitoring repositories"
 })
 
 # Timer tick handler with verbose logging
@@ -1079,14 +1101,6 @@ $timer.Add_Tick({
             Start-AsyncOperation -OperationName "Sync $repo" -RepoName $repo
         }
     }
-})
-
-# Stop button click handler
-$stopButton.Add_Click({
-    $timer.Stop()
-    $startButton.Enabled = $true
-    $stopButton.Enabled = $false
-    Log-Message "Stopped monitoring repositories"
 })
 
 # Clear button click handler
