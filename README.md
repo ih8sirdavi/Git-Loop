@@ -62,23 +62,22 @@ cd "Git Loop"
    - Click the "Start" button
    - Verify in the log: "Started monitoring selected repositories"
    - Initial sync should begin immediately
-   - Status strip shows next sync time (current time + 30s)
+   - Status strip shows countdown timer (30 seconds)
+   - Watch the countdown update every second
    - Repository icons should change to "Syncing"
-   - Watch verbose output for sync progress
 
-6. Verify background sync:
-   - Keep Git Loop running for 2-3 minutes
-   - Every 30 seconds you should see:
-     * "Timer tick: Starting periodic sync" in verbose output
-     * Status strip updates with new next sync time
-     * New sync operations start for each repository
-     * Repository status icons update during sync
+6. Monitor sync countdown:
+   - Status strip shows "Next sync in: XX seconds"
+   - Counter decrements every second
+   - When counter reaches 0, new sync starts
+   - Counter resets to 30 (or configured interval)
+   - Repository status updates during sync
 
 7. Test sync detection:
    - Open one of the monitored repositories
    - Make a small change (e.g., edit a text file)
    - Save the change
-   - Wait for next sync interval
+   - Wait for countdown to reach 0
    - Verify Git Loop detects and syncs the change
    - Check status box for sync confirmation
 
@@ -86,21 +85,21 @@ cd "Git Loop"
    - Click "Stop" button
    - Verify:
      * "Monitoring stopped" in log
+     * Countdown timer stops
      * Start button becomes enabled
-     * Status strip updates
      * All sync operations clean up
    - Click "Start" to resume
-   - Verify sync resumes on schedule
+   - Verify countdown starts from 30 again
 
 9. Common issues:
-   - No background sync:
-     * Check verbose output for timer ticks
-     * Verify status strip shows next sync time
-     * Try stopping and restarting monitoring
-   - Sync not detecting changes:
-     * Ensure repository is selected
-     * Check repository path in config
-     * Verify Git credentials are working
+   - Countdown not updating:
+     * Check if monitoring is actually started
+     * Try stopping and restarting
+     * Watch verbose output for errors
+   - Sync not running at 0:
+     * Check verbose output for "Timer tick" messages
+     * Verify repository selection
+     * Check for running sync jobs in log
 
 10. Adjust sync interval (optional):
     - Open `config` file
@@ -108,6 +107,7 @@ cd "Git Loop"
     - Change to desired seconds (e.g., 10 for testing)
     - Save config file
     - Restart Git Loop completely
+    - Verify countdown starts from new interval
 
 ## 🛠️ Configuration
 

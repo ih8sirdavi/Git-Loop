@@ -1006,6 +1006,13 @@ $countdownTimer = New-Object System.Windows.Forms.Timer
 $countdownTimer.Interval = 1000  # Update every second
 $script:nextSyncTime = $null
 
+# Add job monitor timer
+$jobMonitorTimer = New-Object System.Windows.Forms.Timer
+$jobMonitorTimer.Interval = 1000  # Check jobs every second
+$jobMonitorTimer.Add_Tick({
+    Start-JobMonitor
+})
+
 $countdownTimer.Add_Tick({
     if ($script:nextSyncTime) {
         $timeLeft = $script:nextSyncTime - (Get-Date)
@@ -1047,6 +1054,7 @@ $startButton.Add_Click({
     
     $timer.Start()
     $countdownTimer.Start()
+    $jobMonitorTimer.Start()
     $startButton.Enabled = $false
     $stopButton.Enabled = $true
     Log-Message "Started monitoring selected repositories"
@@ -1073,6 +1081,7 @@ $stopButton.Add_Click({
     Write-Verbose "Stop button clicked - stopping sync operations"
     $timer.Stop()
     $countdownTimer.Stop()
+    $jobMonitorTimer.Stop()
     $startButton.Enabled = $true
     $stopButton.Enabled = $false
     
@@ -1102,6 +1111,14 @@ $form.Add_FormClosing({
     if ($timer) {
         $timer.Stop()
         $timer.Dispose()
+    }
+    if ($countdownTimer) {
+        $countdownTimer.Stop()
+        $countdownTimer.Dispose()
+    }
+    if ($jobMonitorTimer) {
+        $jobMonitorTimer.Stop()
+        $jobMonitorTimer.Dispose()
     }
     if ($testTimer) {
         $testTimer.Stop()
