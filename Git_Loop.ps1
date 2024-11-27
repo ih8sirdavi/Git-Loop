@@ -1,3 +1,9 @@
+[CmdletBinding()]
+param(
+    [Parameter()]
+    [switch]$Test
+)
+
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
@@ -1056,6 +1062,10 @@ $form.Add_FormClosing({
         $timer.Stop()
         $timer.Dispose()
     }
+    if ($testTimer) {
+        $testTimer.Stop()
+        $testTimer.Dispose()
+    }
 })
 
 # Create tooltips
@@ -1271,6 +1281,21 @@ function Test-Dependencies {
     
     Write-Verbose "Dependency check complete"
     return $true
+}
+
+# Add test timeout timer if -Test parameter is provided
+$testTimer = $null
+if ($PSBoundParameters['Test']) {
+    Write-Verbose "Running in test mode with 30-second timeout"
+    $testTimer = New-Object System.Windows.Forms.Timer
+    $testTimer.Interval = 30000  # 30 seconds
+    $testTimer.Add_Tick({
+        Write-Verbose "Test timeout reached, closing application"
+        $form.Close()
+        $testTimer.Stop()
+        $testTimer.Dispose()
+    })
+    $testTimer.Start()
 }
 
 # Add dependency check before showing form
