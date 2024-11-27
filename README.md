@@ -37,44 +37,77 @@ cd "Git Loop"
 
 ## 🧪 Testing Background Sync
 
-1. Start Git Loop with verbose logging:
+1. Preparation:
+   - Close any running instances of Git Loop
+   - Open PowerShell as Administrator
+   - Navigate to Git Loop directory
+
+2. Start Git Loop with verbose logging:
 ```powershell
 .\Git_Loop.ps1 -Verbose
 ```
 
-2. Test the background sync:
-   - Select one or more repositories in the list
-   - Click "Start" to begin monitoring
-   - You should see "Started monitoring selected repositories" in the log
-   - The status strip at the bottom will show the next sync time
-   - Initial sync will begin immediately
-   - Every 30 seconds, new sync operations will start automatically
-   - Watch the verbose output for "Timer tick: Starting periodic sync" messages
+3. Initial setup:
+   - Wait for the application to fully load
+   - The repository list should populate
+   - Status strip should show "Ready"
 
-3. Verify sync is working:
-   - Make a small change in one of the monitored repositories (e.g., edit a file)
-   - Wait for the next sync interval (watch the status strip)
-   - Git Loop should detect and sync the changes
-   - The repository's status icon will update during sync
-   - Check the log box for sync confirmation messages
+4. Test repository selection:
+   - Select 2-3 repositories to test with
+   - Each selection should show in the log
+   - Repository details should update
+   - Status icons should show "Pending"
 
-4. Test stopping and restarting:
-   - Click "Stop" to pause monitoring
-   - Status strip will show "Monitoring stopped"
-   - All running sync jobs will be cleaned up
-   - Click "Start" to resume monitoring
-   - Background sync should continue every 30 seconds
+5. Start background sync:
+   - Click the "Start" button
+   - Verify in the log: "Started monitoring selected repositories"
+   - Initial sync should begin immediately
+   - Status strip shows next sync time (current time + 30s)
+   - Repository icons should change to "Syncing"
+   - Watch verbose output for sync progress
 
-5. Troubleshooting:
-   - If syncs aren't running, check the verbose output
-   - Ensure the repositories are properly selected
-   - Verify the status strip is showing next sync time
-   - Try stopping and restarting the monitoring
+6. Verify background sync:
+   - Keep Git Loop running for 2-3 minutes
+   - Every 30 seconds you should see:
+     * "Timer tick: Starting periodic sync" in verbose output
+     * Status strip updates with new next sync time
+     * New sync operations start for each repository
+     * Repository status icons update during sync
 
-6. Adjust sync interval (optional):
-   - Open the `config` file
-   - Change "SyncInterval" to desired seconds (e.g., 10 for testing)
-   - Save and restart Git Loop
+7. Test sync detection:
+   - Open one of the monitored repositories
+   - Make a small change (e.g., edit a text file)
+   - Save the change
+   - Wait for next sync interval
+   - Verify Git Loop detects and syncs the change
+   - Check status box for sync confirmation
+
+8. Test stop/restart:
+   - Click "Stop" button
+   - Verify:
+     * "Monitoring stopped" in log
+     * Start button becomes enabled
+     * Status strip updates
+     * All sync operations clean up
+   - Click "Start" to resume
+   - Verify sync resumes on schedule
+
+9. Common issues:
+   - No background sync:
+     * Check verbose output for timer ticks
+     * Verify status strip shows next sync time
+     * Try stopping and restarting monitoring
+   - Sync not detecting changes:
+     * Ensure repository is selected
+     * Check repository path in config
+     * Verify Git credentials are working
+
+10. Adjust sync interval (optional):
+    - Open `config` file
+    - Locate "SyncInterval" setting
+    - Change to desired seconds (e.g., 10 for testing)
+    - Save config file
+    - Restart Git Loop completely
 
 ## 🛠️ Configuration
 

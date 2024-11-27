@@ -1001,9 +1001,24 @@ function Start-JobMonitor {
 $timer = New-Object System.Windows.Forms.Timer
 $timer.Interval = $config.SyncInterval * 1000  # Convert to milliseconds
 
+# Add countdown timer
+$countdownTimer = New-Object System.Windows.Forms.Timer
+$countdownTimer.Interval = 1000  # Update every second
+$script:nextSyncTime = $null
+
+$countdownTimer.Add_Tick({
+    if ($script:nextSyncTime) {
+        $timeLeft = $script:nextSyncTime - (Get-Date)
+        if ($timeLeft.TotalSeconds -gt 0) {
+            $statusLabel.Text = "Next sync in: $([Math]::Floor($timeLeft.TotalSeconds)) seconds"
+        }
+    }
+})
+
 # Add timer tick handler
 $timer.Add_Tick({
     Write-Verbose "Timer tick: Starting periodic sync"
+    $script:nextSyncTime = (Get-Date).AddSeconds($config.SyncInterval)
     $selectedRepos = Get-SelectedRepositories
     
     foreach ($repoName in $selectedRepos) {
@@ -1014,14 +1029,12 @@ $timer.Add_Tick({
         }
         Start-AsyncOperation -OperationName "Sync $repoName" -RepoName $repoName
     }
-    
-    Update-StatusStrip
 })
 
 # Update status strip with next sync time
 function Update-StatusStrip {
-    $nextSync = (Get-Date).AddSeconds($config.SyncInterval)
-    $statusLabel.Text = "Next sync at: $($nextSync.ToString('HH:mm:ss'))"
+    $script:nextSyncTime = (Get-Date).AddSeconds($config.SyncInterval)
+    $statusLabel.Text = "Next sync in: $($config.SyncInterval) seconds"
 }
 
 # Start button click handler with verbose logging
@@ -1033,6 +1046,7 @@ $startButton.Add_Click({
     }
     
     $timer.Start()
+    $countdownTimer.Start()
     $startButton.Enabled = $false
     $stopButton.Enabled = $true
     Log-Message "Started monitoring selected repositories"
@@ -1058,6 +1072,7 @@ $startButton.Add_Click({
 $stopButton.Add_Click({
     Write-Verbose "Stop button clicked - stopping sync operations"
     $timer.Stop()
+    $countdownTimer.Stop()
     $startButton.Enabled = $true
     $stopButton.Enabled = $false
     
@@ -1072,35 +1087,8 @@ $stopButton.Add_Click({
     $script:runningJobs.Clear()
     
     $statusLabel.Text = "Monitoring stopped"
+    $script:nextSyncTime = $null
     Log-Message "Stopped monitoring repositories"
-})
-
-# Timer tick handler with verbose logging
-$timer.Add_Tick({
-    # Get currently selected repositories
-    $selectedRepos = Get-SelectedRepositories
-    
-    # Remove any running jobs for unselected repositories
-    $script:runningJobs.Keys | Where-Object {
-        $jobRepoName = $_ -replace '^(?:Initial )?Sync (.+)$','$1'
-        if ($jobRepoName -notin $selectedRepos) {
-            $job = $script:runningJobs[$_].Job
-            if ($job) {
-                Stop-Job -Job $job -ErrorAction SilentlyContinue
-                Remove-Job -Job $job
-            }
-            $script:runningJobs.Remove($_)
-            Write-Verbose "Removed job for unselected repository: $jobRepoName"
-        }
-    }
-    
-    # Start sync for selected repositories
-    foreach ($repo in $selectedRepos) {
-        # Only start a new job if there isn't already one running for this repo
-        if (-not ($script:runningJobs.Keys | Where-Object { $_ -like "*Sync $repo" })) {
-            Start-AsyncOperation -OperationName "Sync $repo" -RepoName $repo
-        }
-    }
 })
 
 # Clear button click handler
