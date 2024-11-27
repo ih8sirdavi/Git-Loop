@@ -125,30 +125,62 @@ cd "Git Loop"
     - Restart Git Loop completely
     - Verify all timers use new interval
 
-## 🛠️ Configuration
+## ⚙️ Configuration
 
-The configuration file (`config`) is automatically created on first run:
+The application can be configured through the `config` file. Here are the key settings:
 
 ```json
 {
     "Repositories": [
         {
             "Name": "Git Loop",
-            "Path": "D:\\Projects\\Git Loop",
+            "Path": ".",
             "Branch": "main",
-            "RemoteUrl": "git@github.com:username/repo.git",
+            "RemoteUrl": "git@github.com:USERNAME/Git-Loop.git",
             "AutoSync": true
         }
     ],
     "SyncInterval": 30,
     "MaxRetries": 3,
+    "JobTimeoutSeconds": 300,
     "LogRetention": 100,
     "LogFile": "GitLoop.log",
     "MaxLogSize": "5MB",
-    "Theme": "Light",
-    "JobTimeoutSeconds": 300
+    "Theme": "Light"
 }
 ```
+
+### Configuration Options
+
+- **SyncInterval**: Time between sync operations (seconds)
+- **MaxRetries**: Number of retry attempts for failed operations
+- **JobTimeoutSeconds**: Maximum duration for sync operations (default: 300s)
+- **LogRetention**: Number of log files to keep
+- **MaxLogSize**: Maximum size for log files
+- **Theme**: UI theme ("Light" or "Dark")
+
+### Job Timeout Behavior
+
+The `JobTimeoutSeconds` setting controls how long Git Loop will wait for sync operations to complete:
+
+1. **Default Duration**: 5 minutes (300 seconds)
+2. **Timeout Actions**:
+   - Operation is forcefully stopped
+   - Error is logged with timeout duration
+   - Repository status updates to "Error"
+   - Job is cleaned up and removed
+
+3. **Common Timeout Scenarios**:
+   - Slow network connections
+   - Large repository syncs
+   - Git server unresponsiveness
+   - SSH authentication delays
+
+4. **Handling Timeouts**:
+   - Failed operations will retry on next sync cycle
+   - Check logs for detailed error messages
+   - Adjust timeout duration if needed
+   - Consider network and repository size
 
 ## 📁 Directory Structure
 
