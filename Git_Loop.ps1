@@ -1071,6 +1071,89 @@ $themeButton.FlatAppearance.MouseOverBackColor = $theme.ButtonHover
 $statusStrip.BackColor = $theme.Background
 $statusLabel.ForeColor = $theme.TextSecondary
 
+# Function to update repository details with better formatting
+function Update-RepositoryDetails {
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$repoName
+    )
+    
+    Write-Verbose "Starting repository details update for $repoName"
+    
+    try {
+        $repoConfig = $config.Repositories | Where-Object { $_.Name -eq $repoName }
+        if (-not $repoConfig) { 
+            Write-Verbose "Repository configuration not found for $repoName"
+            return 
+        }
+
+        Write-Verbose "Changing directory to $($repoConfig.Path)"
+        Push-Location $repoConfig.Path
+
+        # Get repository status with verbose logging
+        Write-Verbose "Fetching git status for $repoName"
+        $status = git status --porcelain
+        
+        Write-Verbose "Getting branch information"
+        $branch = git rev-parse --abbrev-ref HEAD 2>$null
+        if ($LASTEXITCODE -ne 0) { Write-Verbose "Failed to get branch name" }
+        
+        Write-Verbose "Calculating ahead/behind commits"
+        $ahead = git rev-list origin/$branch..HEAD --count 2>$null
+        if ($LASTEXITCODE -ne 0) { Write-Verbose "Failed to calculate ahead commits" }
+        
+        $behind = git rev-list HEAD..origin/$branch --count 2>$null
+        if ($LASTEXITCODE -ne 0) { Write-Verbose "Failed to calculate behind commits" }
+        
+        Write-Verbose "Getting last commit"
+        $lastCommit = git log -1 --format="%h - %s [%ar]" 2>$null
+        if ($LASTEXITCODE -ne 0) { Write-Verbose "Failed to get last commit" }
+        
+        Write-Verbose "Getting remote URL"
+        $remoteUrl = git config --get remote.origin.url 2>$null
+        if ($LASTEXITCODE -ne 0) { Write-Verbose "Failed to get remote URL" }
+
+        # Build details string with safe characters
+        Write-Verbose "Building details string"
+        $details = [System.Text.StringBuilder]::new()
+        [void]$details.AppendLine("[Repository] $repoName")
+        [void]$details.AppendLine("[Remote] $remoteUrl")
+        [void]$details.AppendLine("[Branch] $branch")
+        [void]$details.AppendLine("")
+        [void]$details.AppendLine("Status:")
+        [void]$details.AppendLine("  * Ahead by: $ahead commit(s)")
+        [void]$details.AppendLine("  * Behind by: $behind commit(s)")
+        [void]$details.AppendLine("")
+        [void]$details.AppendLine("Last Commit:")
+        [void]$details.AppendLine("  $lastCommit")
+        
+        if ($status) {
+            Write-Verbose "Adding working tree changes"
+            [void]$details.AppendLine("")
+            [void]$details.AppendLine("Working Tree Changes:")
+            $status -split "`n" | Where-Object { $_ } | ForEach-Object {
+                [void]$details.AppendLine("  $($_)")
+            }
+        }
+
+        Write-Verbose "Updating details box text"
+        Update-UI {
+            $detailsBox.Text = $details.ToString()
+        }
+    }
+    catch {
+        $errorMessage = "Unable to fetch repository details: $_"
+        Write-Verbose "Error in Update-RepositoryDetails: $errorMessage"
+        Update-UI {
+            $detailsBox.Text = $errorMessage
+        }
+    }
+    finally {
+        Pop-Location
+        Write-Verbose "Finished updating repository details for $repoName"
+    }
+}
+
 # Check dependencies before starting
 function Test-Dependencies {
     Write-Verbose "Checking dependencies..."
