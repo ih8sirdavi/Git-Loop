@@ -287,40 +287,110 @@ foreach ($status in $repoStatusImages.Keys) {
     $imageList.Images.Add($status, $repoStatusImages[$status])
 }
 
-# Theme definitions
+# Function to update existing config with new settings
+function Update-ConfigurationWithDefaults {
+    param (
+        [Parameter(Mandatory=$true)]
+        [PSCustomObject]$CurrentConfig,
+        
+        [Parameter(Mandatory=$true)]
+        [string]$ConfigPath
+    )
+    
+    Write-Verbose "Loading default configuration template"
+    $defaultConfig = Get-Content "config.example" | ConvertFrom-Json
+    $updated = $false
+    
+    # Helper function to recursively merge objects
+    function Merge-Objects {
+        param($Current, $Default)
+        
+        if ($Default -is [PSCustomObject]) {
+            if ($null -eq $Current) {
+                $Current = [PSCustomObject]@{}
+                $updated = $true
+            }
+            
+            $Default.PSObject.Properties | ForEach-Object {
+                if ($null -eq $Current.$($_.Name)) {
+                    $Current | Add-Member -NotePropertyName $_.Name -NotePropertyValue (Merge-Objects $null $_.Value)
+                    $updated = $true
+                    Write-Verbose "Added new property: $($_.Name)"
+                } else {
+                    $Current.$($_.Name) = Merge-Objects $Current.$($_.Name) $_.Value
+                }
+            }
+            return $Current
+        } elseif ($Default -is [Array]) {
+            if ($null -eq $Current) {
+                $updated = $true
+                return $Default
+            }
+            return $Current
+        } else {
+            if ($null -eq $Current) {
+                $updated = $true
+                return $Default
+            }
+            return $Current
+        }
+    }
+    
+    $updatedConfig = Merge-Objects $CurrentConfig $defaultConfig
+    
+    if ($updated) {
+        Write-Verbose "Configuration updated with new default values"
+        $updatedConfig | ConvertTo-Json -Depth 10 | Set-Content $ConfigPath
+        Write-Verbose "Updated configuration saved to $ConfigPath"
+    } else {
+        Write-Verbose "No configuration updates needed"
+    }
+    
+    return $updatedConfig
+}
+
+# Load and update configuration
+$config = if (Test-Path $configPath) {
+    Write-Verbose "Loading existing configuration from $configPath"
+    $currentConfig = Get-Content $configPath | ConvertFrom-Json
+    Update-ConfigurationWithDefaults -CurrentConfig $currentConfig -ConfigPath $configPath
+} else {
+    Write-Verbose "Creating new configuration from template"
+    Copy-Item "config.example" $configPath
+    Get-Content $configPath | ConvertFrom-Json
+}
+
+# Theme definitions from config
 $script:themes = @{
-    Light = @{
-        Background = [System.Drawing.Color]::FromArgb(248, 248, 248)
-        TextPrimary = [System.Drawing.Color]::FromArgb(60, 60, 60)
-        TextSecondary = [System.Drawing.Color]::FromArgb(120, 120, 120)
-        ButtonBackground = [System.Drawing.Color]::FromArgb(240, 240, 240)
-        ButtonHover = [System.Drawing.Color]::FromArgb(230, 230, 230)
-        ButtonBorder = [System.Drawing.Color]::FromArgb(200, 200, 200)
-        Success = [System.Drawing.Color]::FromArgb(40, 167, 69)
-        Error = [System.Drawing.Color]::FromArgb(220, 53, 69)
-        Warning = [System.Drawing.Color]::FromArgb(255, 193, 7)
-    }
-    Dark = @{
-        Background = [System.Drawing.Color]::FromArgb(30, 30, 30)
-        TextPrimary = [System.Drawing.Color]::FromArgb(240, 240, 240)
-        TextSecondary = [System.Drawing.Color]::FromArgb(180, 180, 180)
-        ButtonBackground = [System.Drawing.Color]::FromArgb(45, 45, 45)
-        ButtonHover = [System.Drawing.Color]::FromArgb(60, 60, 60)
-        ButtonBorder = [System.Drawing.Color]::FromArgb(70, 70, 70)
-        Success = [System.Drawing.Color]::FromArgb(40, 167, 69)
-        Error = [System.Drawing.Color]::FromArgb(220, 53, 69)
-        Warning = [System.Drawing.Color]::FromArgb(255, 193, 7)
+    Light = @{}
+    Dark = @{}
+}
+
+# Convert hex colors to System.Drawing.Color
+function ConvertFrom-HexColor {
+    param([string]$hex)
+    $hex = $hex.TrimStart('#')
+    $r = [Convert]::ToInt32($hex.Substring(0,2), 16)
+    $g = [Convert]::ToInt32($hex.Substring(2,2), 16)
+    $b = [Convert]::ToInt32($hex.Substring(4,2), 16)
+    return [System.Drawing.Color]::FromArgb($r, $g, $b)
+}
+
+# Load theme colors from config
+$config.UI.Themes.PSObject.Properties | ForEach-Object {
+    $themeName = $_.Name
+    $themeColors = $_.Value
+    
+    $script:themes[$themeName] = @{}
+    $themeColors.PSObject.Properties | ForEach-Object {
+        $colorName = $_.Name
+        $colorValue = ConvertFrom-HexColor $_.Value
+        $script:themes[$themeName][$colorName] = $colorValue
     }
 }
 
-# Current theme (default to Light)
-$script:currentTheme = "Light"
-
-# Load theme from config if exists
-if ($config.Theme) {
-    $script:currentTheme = $config.Theme
-    Write-Verbose "Loaded theme preference from config: $script:currentTheme"
-}
+# Set current theme from config
+$script:currentTheme = $config.Theme
 
 # Create the form with modern styling
 $form = New-Object System.Windows.Forms.Form
@@ -963,69 +1033,6 @@ Remote: $($_.RemoteUrl)
     $tooltips.SetToolTip($repoListView, $tooltipText)
 }
 
-# Theme button
-$themeButton = New-Object System.Windows.Forms.Button
-$themeButton.Text = " Toggle Theme"
-$themeButton.Width = 120
-$themeButton.Height = 30
-$themeButton.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
-$themeButton.Add_Click({ Switch-Theme })
-$buttonPanel.Controls.Add($themeButton)
-
-# Function to toggle theme
-function Switch-Theme {
-    $script:currentTheme = if ($script:currentTheme -eq "Light") { "Dark" } else { "Light" }
-    $theme = $script:themes[$script:currentTheme]
-    
-    Write-Verbose "Switching to $script:currentTheme theme"
-    
-    # Update form
-    $form.BackColor = $theme.Background
-    $form.ForeColor = $theme.TextPrimary
-    
-    # Update repository list
-    $repoListView.BackColor = $theme.Background
-    $repoListView.ForeColor = $theme.TextPrimary
-    
-    # Update details box
-    $detailsBox.BackColor = $theme.Background
-    $detailsBox.ForeColor = $theme.TextPrimary
-    
-    # Update status box
-    $statusBox.BackColor = $theme.Background
-    $statusBox.ForeColor = $theme.TextPrimary
-    
-    # Update buttons
-    $startButton.BackColor = $theme.ButtonBackground
-    $startButton.ForeColor = $theme.TextPrimary
-    $startButton.FlatAppearance.BorderColor = $theme.ButtonBorder
-    $startButton.FlatAppearance.MouseOverBackColor = $theme.ButtonHover
-    
-    $stopButton.BackColor = $theme.ButtonBackground
-    $stopButton.ForeColor = $theme.TextPrimary
-    $stopButton.FlatAppearance.BorderColor = $theme.ButtonBorder
-    $stopButton.FlatAppearance.MouseOverBackColor = $theme.ButtonHover
-    
-    $clearButton.BackColor = $theme.ButtonBackground
-    $clearButton.ForeColor = $theme.TextPrimary
-    $clearButton.FlatAppearance.BorderColor = $theme.ButtonBorder
-    $clearButton.FlatAppearance.MouseOverBackColor = $theme.ButtonHover
-    
-    $themeButton.BackColor = $theme.ButtonBackground
-    $themeButton.ForeColor = $theme.TextPrimary
-    $themeButton.FlatAppearance.BorderColor = $theme.ButtonBorder
-    $themeButton.FlatAppearance.MouseOverBackColor = $theme.ButtonHover
-    
-    # Update status strip
-    $statusStrip.BackColor = $theme.Background
-    $statusLabel.ForeColor = $theme.TextSecondary
-    
-    # Save theme preference
-    $config | Add-Member -NotePropertyName "Theme" -NotePropertyValue $script:currentTheme -Force
-    $config | ConvertTo-Json -Depth 10 | Set-Content $configPath
-    Write-Verbose "Theme preference saved to config"
-}
-
 # Apply initial theme
 $theme = $script:themes[$script:currentTheme]
 Write-Verbose "Applying initial theme: $script:currentTheme"
@@ -1061,11 +1068,6 @@ $clearButton.BackColor = $theme.ButtonBackground
 $clearButton.ForeColor = $theme.TextPrimary
 $clearButton.FlatAppearance.BorderColor = $theme.ButtonBorder
 $clearButton.FlatAppearance.MouseOverBackColor = $theme.ButtonHover
-
-$themeButton.BackColor = $theme.ButtonBackground
-$themeButton.ForeColor = $theme.TextPrimary
-$themeButton.FlatAppearance.BorderColor = $theme.ButtonBorder
-$themeButton.FlatAppearance.MouseOverBackColor = $theme.ButtonHover
 
 # Apply theme to status strip
 $statusStrip.BackColor = $theme.Background

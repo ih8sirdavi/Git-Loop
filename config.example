@@ -12,5 +12,32 @@
     "MaxRetries": 3,
     "LogRetention": 100,
     "LogFile": "GitLoop.log",
-    "MaxLogSize": "5MB"
+    "MaxLogSize": "5MB",
+    "Theme": "Light",
+    "UI": {
+        "Themes": {
+            "Light": {
+                "Background": "#F8F8F8",
+                "TextPrimary": "#3C3C3C",
+                "TextSecondary": "#787878",
+                "ButtonBackground": "#F0F0F0",
+                "ButtonHover": "#E6E6E6",
+                "ButtonBorder": "#C8C8C8",
+                "Success": "#28A745",
+                "Error": "#DC3545",
+                "Warning": "#FFC107"
+            },
+            "Dark": {
+                "Background": "#1E1E1E",
+                "TextPrimary": "#F0F0F0",
+                "TextSecondary": "#B4B4B4",
+                "ButtonBackground": "#2D2D2D",
+                "ButtonHover": "#3C3C3C",
+                "ButtonBorder": "#464646",
+                "Success": "#28A745",
+                "Error": "#DC3545",
+                "Warning": "#FFC107"
+            }
+        }
+    }
 }
