@@ -1,160 +1,146 @@
 # Git Loop
 
-A PowerShell-based Git repository synchronization tool with a modern UI for automatically managing multiple repositories.
+An automated Git repository synchronization tool that keeps multiple repositories in sync with minimal user intervention.
 
 ## Features
 
-- **Multi-Repository Management**
-  - Monitor multiple repositories simultaneously
-  - Automatic synchronization with remote repositories
-  - Configurable sync intervals
-  - Support for both HTTPS and SSH repository URLs
+- 🔄 Automatic multi-repository synchronization
+- ⚙️ Configurable sync intervals
+- 🔐 Secure SSH authentication
+- 📁 Multiple repository support
+- 📝 Comprehensive logging
+- 🔧 Easy configuration management
 
-- **Automatic Git Operations**
-  - Auto-commit local changes
-  - Auto-push to main branch
-  - Auto-pull from remote
-  - Conflict resolution (favoring remote changes)
-  - Detailed status tracking
+## Installation
 
-- **Modern UI**
-  - Clean, minimalist design
-  - Repository selection with checkboxes
-  - Hover-based repository details
-  - Real-time status updates
-  - Detailed logging panel
+1. Clone this repository:
+```powershell
+git clone git@github.com:ih8sirdavi/Git-Loop.git
+```
+
+2. Ensure you have the required dependencies:
+   - Git installed and configured
+   - PowerShell 5.1 or later
+   - .NET Framework 4.5+
+
+3. Run the script:
+```powershell
+.\Git_Loop.ps1
+```
+
+On first run, the script will:
+- Detect your Git username
+- Create initial configuration
+- Set up logging directory
+- Initialize Git ignore rules
 
 ## Configuration
 
-The configuration is stored in a file named `config` in the same directory as the script. Here's an example configuration:
+The tool uses a JSON configuration file (`config`) with the following structure:
 
 ```json
 {
     "Repositories": [
         {
-            "Name": "RepoName",
-            "Path": "D:\\Path\\To\\Repo",
+            "Name": "Repository Name",
+            "Path": "D:\\Path\\To\\Repository",
             "Branch": "main",
             "RemoteUrl": "git@github.com:username/repo.git",
             "AutoSync": true
         }
     ],
-    "SyncInterval": 30,    // Seconds between sync checks
-    "MaxRetries": 3,       // Maximum retry attempts
-    "LogRetention": 100,   // Maximum log entries
+    "SyncInterval": 30,
+    "MaxRetries": 3,
+    "LogRetention": 100,
     "LogFile": "GitLoop.log",
-    "MaxLogSize": "5MB"    // Maximum log file size before rotation
+    "MaxLogSize": "5MB"
 }
 ```
 
-## Prerequisites
+### Configuration Files
+- `config`: Main configuration file (not tracked in Git)
+- `config.example`: Template configuration (tracked in Git)
+- `logs/config.backup`: Automatic backup of your configuration
 
-- Windows OS
-- PowerShell 5.1 or later
-- Git installed and configured
-- .NET Framework 4.5 or later
+### Configuration Options
+- `SyncInterval`: Time between syncs in seconds
+- `MaxRetries`: Number of retry attempts for failed operations
+- `LogRetention`: Number of log files to keep
+- `MaxLogSize`: Maximum size for log files
 
-## Installation
+## Directory Structure
 
-1. Clone or download this repository
-2. Configure your repositories in the `config` file
-3. Run `Git_Loop.ps1` with PowerShell
-
-```powershell
-powershell -ExecutionPolicy Bypass -File Git_Loop.ps1
 ```
+Git Loop/
+├── Git_Loop.ps1      # Main script
+├── config            # Your configuration (ignored by Git)
+├── config.example    # Configuration template
+├── logs/            # Log directory
+│   ├── GitLoop.log   # Operation logs
+│   └── config.backup # Configuration backup
+└── .gitignore       # Git ignore rules
+```
+
+## Git Ignore Rules
+
+The following paths are automatically ignored:
+- `/logs/` - All log files and configuration backups
+- `/config` - Your personal configuration
+- `/.git/` - Git directory
+
+The `config.example` file is tracked to serve as a template for new users.
 
 ## Usage
 
-1. Launch the script
-2. Select repositories to monitor using checkboxes
-3. Click "Start" to begin monitoring
-4. Hover over repository names to view detailed status
-5. Use the log panel to track operations
+1. Fork the repository
+2. Configure your repositories in the config file
+3. Run the script:
+   ```powershell
+   .\Git_Loop.ps1 -Verbose  # For detailed logging
+   ```
 
-The script will automatically:
-- Commit any local changes
-- Pull remote changes
-- Push local changes to main
-- Handle basic merge conflicts
+The script will:
+- Load your configuration
+- Create a backup in logs/config.backup
+- Start monitoring your repositories
+- Automatically sync changes
 
-## UI Elements
+## Security
 
-- **Repository List**: Checkbox-based selection with hover details
-- **Details Panel**: Shows repository status and git information
-- **Log Panel**: Real-time operation logging
-- **Status Bar**: Current sync status and last operation time
-- **Control Buttons**: Start/Stop monitoring
+- Uses SSH for authentication
+- No credentials stored in script
+- Runs with your Git permissions
+- Configuration files not tracked in Git
 
-## Color Scheme
+## Troubleshooting
 
-```powershell
-Background: #F8F8F8
-Button Background: #F0F0F0
-Primary Text: #3C3C3C
-Secondary Text: #787878
-```
+If you encounter issues:
+1. Run with `-Verbose` flag for detailed logging
+2. Check `logs/GitLoop.log` for operation logs
+3. Verify SSH key configuration
+4. Ensure Git is properly configured
 
-## Security Notes
+## Contributing
 
-- Uses local git configuration
-- Supports both HTTPS and SSH authentication
-- No credential storage in script
-- Runs with user's git permissions
+1. Fork the repository
+2. Create your feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
-## Known Limitations
+## License
 
-- Windows-only support
-- Requires local git configuration
-- Auto-resolves conflicts by taking remote changes
-- Single branch (main) support
-- No credential management
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Error Handling
+## Author
 
-- Detailed error logging
-- Automatic retry on failed operations
-- Safe state recovery
-- Verbose operation logging
+Created by ih8sirdavi
 
-## Future Enhancements
+## Acknowledgments
 
-- **Advanced Repository Management**
-  - Branch-specific configurations and policies
-  - Support for multiple branch monitoring
-  - Custom pre-commit and post-commit hooks
-  - Repository health checks and diagnostics
-
-- **Enhanced Conflict Resolution**
-  - Interactive conflict resolution interface
-  - Configurable conflict resolution strategies
-  - Backup creation before conflict resolution
-  - Visual diff tool integration
-
-- **Extended UI Features**
-  - Dark mode support
-  - Customizable UI themes
-  - Repository grouping and tagging
-  - Advanced filtering and search capabilities
-  - Performance metrics and analytics dashboard
-
-- **Security and Authentication**
-  - Credential manager integration
-  - Multi-factor authentication support
-  - SSH key management interface
-  - Repository access control lists
-
-- **Automation and Integration**
-  - CI/CD pipeline integration
-  - Webhook support for custom events
-  - Scheduled operations and maintenance
-  - Email/Slack notifications for important events
-
-- **Performance Optimizations**
-  - Parallel repository processing
-  - Incremental status updates
-  - Resource usage monitoring
-  - Network bandwidth optimization
+- PowerShell Windows Forms
+- Git command line interface
+- Modern UI design principles
 
 ## Cross-Platform Development Plans
 
@@ -200,20 +186,41 @@ The current PowerShell implementation, while powerful on Windows systems, has pl
 
 The cross-platform version will maintain the same core functionality while adding platform-specific optimizations and modern development practices.
 
-## Contributing
+## Future Enhancements
 
-Contributions are welcome! Please feel free to submit pull requests or create issues for bugs and feature requests.
+- **Advanced Repository Management**
+  - Branch-specific configurations and policies
+  - Support for multiple branch monitoring
+  - Custom pre-commit and post-commit hooks
+  - Repository health checks and diagnostics
 
-## License
+- **Enhanced Conflict Resolution**
+  - Interactive conflict resolution interface
+  - Configurable conflict resolution strategies
+  - Backup creation before conflict resolution
+  - Visual diff tool integration
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+- **Extended UI Features**
+  - Dark mode support
+  - Customizable UI themes
+  - Repository grouping and tagging
+  - Advanced filtering and search capabilities
+  - Performance metrics and analytics dashboard
 
-## Author
+- **Security and Authentication**
+  - Credential manager integration
+  - Multi-factor authentication support
+  - SSH key management interface
+  - Repository access control lists
 
-Created by ih8sirdavi
+- **Automation and Integration**
+  - CI/CD pipeline integration
+  - Webhook support for custom events
+  - Scheduled operations and maintenance
+  - Email/Slack notifications for important events
 
-## Acknowledgments
-
-- PowerShell Windows Forms
-- Git command line interface
-- Modern UI design principles
+- **Performance Optimizations**
+  - Parallel repository processing
+  - Incremental status updates
+  - Resource usage monitoring
+  - Network bandwidth optimization

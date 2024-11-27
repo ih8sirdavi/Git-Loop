@@ -1,10 +1,56 @@
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
-# Configuration
+# Configuration paths
 $configPath = Join-Path $PSScriptRoot "config"
 $configExamplePath = Join-Path $PSScriptRoot "config.example"
+$logsPath = Join-Path $PSScriptRoot "logs"
+$configBackupPath = Join-Path $logsPath "config.backup"
 Write-Verbose "Looking for configuration at: $configPath"
+
+function Backup-Configuration {
+    param (
+        [Parameter(Mandatory=$true)]
+        [string]$ConfigPath
+    )
+    
+    if (Test-Path $ConfigPath) {
+        Write-Verbose "Creating backup of existing configuration..."
+        try {
+            # Ensure logs directory exists
+            if (-not (Test-Path $logsPath)) {
+                Write-Verbose "Creating logs directory..."
+                New-Item -ItemType Directory -Path $logsPath -Force | Out-Null
+            }
+            
+            Copy-Item -Path $ConfigPath -Destination $configBackupPath -Force
+            Write-Verbose "Configuration backup created at: $configBackupPath"
+        } catch {
+            Write-Warning "Failed to create configuration backup: $_"
+        }
+    }
+}
+
+function Initialize-GitIgnore {
+    $gitIgnorePath = Join-Path $PSScriptRoot ".gitignore"
+    if (-not (Test-Path $gitIgnorePath)) {
+        Write-Verbose "Creating .gitignore file..."
+        @"
+# Ignore logs directory (includes config.backup)
+/logs/
+
+# Ignore main config but not example
+/config
+
+# Keep config example
+!/config.example
+
+# Ignore Git directory
+/.git/
+"@ | Set-Content $gitIgnorePath
+        Write-Verbose ".gitignore file created"
+    }
+}
 
 function Initialize-Configuration {
     Write-Verbose "Starting configuration initialization..."
@@ -127,6 +173,10 @@ function Initialize-Configuration {
     $exampleConfig | ConvertTo-Json -Depth 10 | Set-Content $configPath
     Write-Verbose "Configuration file created successfully"
     
+    Backup-Configuration -ConfigPath $configPath
+    
+    Initialize-GitIgnore
+    
     Write-Host "`nConfiguration created successfully!" -ForegroundColor Green
     Write-Host "Next steps:" -ForegroundColor Cyan
     Write-Host "1. Fork the Git Loop repository at: https://github.com/ih8sirdavi/Git-Loop" -ForegroundColor White
@@ -155,6 +205,10 @@ if (-not (Test-Path $configPath)) {
         Write-Error "Failed to initialize configuration: $_"
         exit 1
     }
+} else {
+    # Backup existing configuration before loading
+    Backup-Configuration -ConfigPath $configPath
+    Initialize-GitIgnore
 }
 
 try {

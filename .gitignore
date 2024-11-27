@@ -1,0 +1,12 @@
+# Ignore logs directory
+/logs/
+
+# Ignore main config but not example
+/config
+/config.backup
+
+# Keep config example
+!/config.example
+
+# Ignore Git directory
+/.git/
