@@ -967,57 +967,111 @@ function Sync-GitRepository {
     }
 
     Write-Verbose "Starting sync for $repoName"
-    Set-Location $repo.Path
-
-    # Verify Git repository
-    if (-not (Test-Path (Join-Path $repo.Path ".git"))) {
-        throw "Directory is not a Git repository: $($repo.Path)"
-    }
-
-    # Verify remote URL
-    $currentRemote = git remote get-url origin 2>$null
-    if ($currentRemote -ne $repo.RemoteUrl) {
-        Write-Verbose "Updating remote URL for $repoName"
-        git remote set-url origin $repo.RemoteUrl
-    }
-
-    # Verify current branch
-    $currentBranch = git rev-parse --abbrev-ref HEAD 2>$null
-    if ($currentBranch -ne $repo.Branch) {
-        Write-Verbose "Switching to branch $($repo.Branch)"
-        git checkout $repo.Branch
-    }
-
+    
     try {
-        # Stage changes
-        Write-Verbose "Staging changes"
-        git add -A
-        
-        # Commit if there are changes
-        $status = git status --porcelain
-        if ($status) {
-            Write-Verbose "Committing changes"
-            git commit -m "Auto-commit: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
-            Log-Message "Committed local changes" -repository $repoName
+        # Change to repository directory
+        Push-Location $repo.Path
+        Write-Verbose "Changed to directory: $($repo.Path)"
+
+        # Verify Git repository
+        if (-not (Test-Path ".git")) {
+            throw "Directory is not a Git repository: $($repo.Path)"
         }
 
-        # Pull changes
-        Write-Verbose "Pulling changes"
-        git pull --no-rebase origin $repo.Branch
-        Log-Message "Fetched changes from remote" -repository $repoName
+        # Verify remote URL
+        $currentRemote = git remote get-url origin 2>$null
+        if ($LASTEXITCODE -ne 0) {
+            throw "Failed to get remote URL: Repository may not be properly configured"
+        }
+        if ($currentRemote -ne $repo.RemoteUrl) {
+            Write-Verbose "Updating remote URL for $repoName"
+            git remote set-url origin $repo.RemoteUrl
+            if ($LASTEXITCODE -ne 0) {
+                throw "Failed to update remote URL"
+            }
+        }
 
-        # Push changes
-        Write-Verbose "Pushing changes"
-        git push origin $repo.Branch
-        Log-Message "Pushed changes to remote" -repository $repoName
+        # Verify current branch
+        $currentBranch = git rev-parse --abbrev-ref HEAD 2>$null
+        if ($LASTEXITCODE -ne 0) {
+            throw "Failed to get current branch"
+        }
+        if ($currentBranch -ne $repo.Branch) {
+            Write-Verbose "Switching to branch $($repo.Branch)"
+            git checkout $repo.Branch 2>$null
+            if ($LASTEXITCODE -ne 0) {
+                throw "Failed to switch to branch $($repo.Branch)"
+            }
+        }
 
-        Log-Message "Repository synchronized successfully" -repository $repoName
+        # Fetch latest changes
+        Write-Verbose "Fetching latest changes"
+        git fetch origin 2>$null
+        if ($LASTEXITCODE -ne 0) {
+            throw "Failed to fetch from remote"
+        }
+
+        # Stage changes
+        Write-Verbose "Staging changes"
+        git add -A 2>$null
+        if ($LASTEXITCODE -ne 0) {
+            throw "Failed to stage changes"
+        }
+        
+        # Check for changes
+        $status = git status --porcelain
+        if ($status) {
+            Write-Verbose "Changes detected, creating commit"
+            
+            # Create commit message with Git Loop signature
+            $timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
+            $commitMessage = @"
+Git Loop (PowerShell) - Auto-sync
+
+- Repository: $repoName
+- Timestamp: $timestamp
+- Branch: $($repo.Branch)
+"@
+            
+            # Commit changes
+            git commit -m $commitMessage 2>$null
+            if ($LASTEXITCODE -ne 0) {
+                throw "Failed to commit changes"
+            }
+            Log-Message "Created Git Loop commit" -repository $repoName
+            
+            # Push changes
+            Write-Verbose "Pushing changes"
+            git push origin $repo.Branch 2>$null
+            if ($LASTEXITCODE -ne 0) {
+                throw "Failed to push changes"
+            }
+            Log-Message "Pushed changes to remote" -repository $repoName
+        } else {
+            Write-Verbose "No changes to commit"
+        }
+
+        # Pull latest changes
+        Write-Verbose "Pulling latest changes"
+        git pull origin $repo.Branch 2>$null
+        if ($LASTEXITCODE -ne 0) {
+            throw "Failed to pull latest changes"
+        }
+        
+        Log-Message "Repository sync completed successfully" -repository $repoName
         Update-RepositoryStatus -repoName $repoName -status "Success"
     }
     catch {
-        Log-Message "Git operation failed: $_" -type "ERROR" -repository $repoName
+        $errorMessage = "Sync failed: $($_.Exception.Message)"
+        Write-Error $errorMessage
+        Log-Message $errorMessage -repository $repoName -isError $true
         Update-RepositoryStatus -repoName $repoName -status "Error"
-        throw
+        throw $errorMessage
+    }
+    finally {
+        # Always return to original directory
+        Pop-Location
+        Write-Verbose "Returned to original directory"
     }
 }
 
