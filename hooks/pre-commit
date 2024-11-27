@@ -1,0 +1,25 @@
+#!/bin/sh
+
+# Check for case-sensitivity issues in file paths
+git ls-files | tr '[:upper:]' '[:lower:]' | sort | uniq -d | while read -r file; do
+    echo "Error: Case-sensitivity conflict detected in: $file"
+    exit 1
+done
+
+# Check for case-sensitivity issues in file renames
+git diff --cached --name-status | grep ^R | while read -r status old new; do
+    if [ "$(echo "$old" | tr '[:upper:]' '[:lower:]')" = "$(echo "$new" | tr '[:upper:]' '[:lower:]')" ] && [ "$old" != "$new" ]; then
+        echo "Error: Case-only rename detected: $old -> $new"
+        exit 1
+    fi
+done
+
+# Validate markdown link case sensitivity
+git diff --cached --name-only | grep '\.md$' | while read -r file; do
+    if git show ":$file" | grep -E '\[[^]]*\]\([^)]*\)' | grep -v -E '\[[^]]*\]\([^)]*\.(png|jpg|jpeg|gif|svg|ico)\)' | grep -E '\[[^]]*\]\([^)]*[A-Z][^)]*\)'; then
+        echo "Error: Found uppercase characters in markdown links in $file"
+        exit 1
+    fi
+done
+
+exit 0

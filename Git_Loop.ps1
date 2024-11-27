@@ -58,6 +58,26 @@ function Initialize-GitIgnore {
     }
 }
 
+function Initialize-Repository {
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$RepoPath
+    )
+    
+    Write-Verbose "Initializing repository at: $RepoPath"
+    
+    # Set case sensitivity
+    git -C $RepoPath config core.ignorecase false
+    
+    # Copy pre-commit hook if it doesn't exist
+    $hookPath = Join-Path $RepoPath ".git/hooks/pre-commit"
+    if (-not (Test-Path $hookPath)) {
+        Copy-Item (Join-Path $PSScriptRoot "hooks/pre-commit") $hookPath -Force
+        # Make executable on Windows
+        Set-ItemProperty -Path $hookPath -Name IsReadOnly -Value $false
+    }
+}
+
 function Initialize-Configuration {
     Write-Verbose "Starting configuration initialization..."
     if (-not (Test-Path $configExamplePath)) {
@@ -182,6 +202,8 @@ function Initialize-Configuration {
     Backup-Configuration -ConfigPath $configPath
     
     Initialize-GitIgnore
+    
+    Initialize-Repository -RepoPath $currentPath
     
     Write-Host "`nConfiguration created successfully!" -ForegroundColor Green
     Write-Host "Next steps:" -ForegroundColor Cyan
