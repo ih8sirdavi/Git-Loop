@@ -1,115 +1,112 @@
-# Git Loop
+# Git Loop (PowerShell)
 
 ## Project Status
-- **Version**: 1.0.0
+- **Version**: 0.1.0-alpha
 - **Last Updated**: 2024
-- **Status**: Active Development
+- **Platform**: Windows-only (Currently)
+- **Status**: Personal Development Tool
 
-An automated Git repository synchronization tool that keeps multiple repositories in sync with minimal user intervention.
+> **Note**: This is the first iteration of Git Loop, currently designed as a Windows-specific PowerShell tool for personal use. Future versions will expand into a full-featured, cross-platform team development solution.
 
-## 🌟 Key Features
+A PowerShell-based Git repository synchronization tool that automatically commits and syncs changes across multiple repositories. Each commit is tagged with "Git Loop (PowerShell)" for easy identification.
+
+## 🎯 Current Scope
 
 ```mermaid
 graph TD
-    A[Git Loop] --> B[Multi-Repo Sync]
-    A --> C[Auto Configuration]
-    A --> D[Secure Auth]
-    A --> E[Logging System]
+    A[Git Loop v0.1.0] --> B[Windows Only]
+    A --> C[PowerShell Based]
+    A --> D[Personal Use]
     
-    B --> B1[Configurable Intervals]
-    B --> B2[Multiple Repositories]
+    B --> B1[PowerShell 5.1+]
+    B --> B2[Windows Path Support]
     
-    C --> C1[Auto Username Detection]
-    C --> C2[Config Backup]
+    C --> C1[Automatic Commits]
+    C --> C2[Git Integration]
     
-    D --> D1[SSH Authentication]
-    D --> D2[No Stored Credentials]
-    
-    E --> E1[Detailed Logging]
-    E --> E2[Config Backups]
+    D --> D1[Single User Focus]
+    D --> D2[Local Config]
 ```
 
-- 🔄 **Automatic Synchronization**
-  - Multi-repository support
-  - Configurable sync intervals
-  - Intelligent conflict handling
+- 🪟 **Windows-Specific Features**
+  - PowerShell automation
+  - Windows path handling
+  - Local system integration
 
-- 🔐 **Secure Authentication**
-  - SSH key support
-  - No credential storage
-  - User permission based
+- 🔄 **Current Capabilities**
+  - Automatic commits with "Git Loop (PowerShell)" signature
+  - Basic multi-repository sync
+  - Local configuration management
 
-- 📝 **Smart Configuration**
-  - Auto-detection of Git settings
-  - Configuration backups
-  - Template-based setup
+- 🏠 **Personal Use Focus**
+  - Single user workflow
+  - Local system optimization
+  - Personal repository management
 
-## 🏗 System Architecture
+## 🚀 Vision & Roadmap
 
 ```mermaid
-sequenceDiagram
-    participant User
-    participant GitLoop
-    participant ConfigSystem
-    participant GitOperations
-    participant RemoteRepo
+gantt
+    title Development Evolution
+    dateFormat  YYYY-MM-DD
+    section Phase 1 (Current)
+    Windows PowerShell Tool    :active, a1, 2024-01-01, 90d
+    Personal Use Optimization  :active, a2, 2024-01-01, 90d
 
-    User->>GitLoop: Start Monitoring
-    GitLoop->>ConfigSystem: Load Configuration
-    ConfigSystem-->>GitLoop: Config Loaded
-    
-    loop Every SyncInterval
-        GitLoop->>GitOperations: Check Repository Status
-        GitOperations->>RemoteRepo: Fetch Changes
-        RemoteRepo-->>GitOperations: Return Status
-        GitOperations-->>GitLoop: Status Update
-        GitLoop->>User: Update UI
-    end
+    section Phase 2
+    Cross-Platform Core       :b1, after a1, 120d
+    Team Features            :b2, after a1, 90d
+    Cloud Integration        :b3, after b2, 60d
+
+    section Phase 3
+    Enterprise Features      :c1, after b1, 180d
+    Advanced Workflows       :c2, after b3, 90d
 ```
 
-## 📦 Installation
+### Future Evolution
+1. **Phase 1 (Current)**
+   - ✅ Windows PowerShell implementation
+   - ✅ Personal workflow optimization
+   - ✅ Basic repository synchronization
 
-1. Clone this repository:
+2. **Phase 2 (Planned)**
+   - 🔲 Cross-platform support (Python/Node.js)
+   - 🔲 Team collaboration features
+   - 🔲 Cloud integration
+   - 🔲 Web interface
+
+3. **Phase 3 (Future)**
+   - 🔲 Enterprise-grade features
+   - 🔲 Team permission management
+   - 🔲 Advanced workflow automation
+   - 🔲 CI/CD integration
+
+## ⚙️ Current Setup (Windows)
+
+### Prerequisites
+- Windows 10/11
+- PowerShell 5.1 or later
+- Git for Windows
+- .NET Framework 4.5+
+
+### Installation
 ```powershell
+# Clone to your Windows system
 git clone git@github.com:ih8sirdavi/Git-Loop.git
-```
+cd "Git Loop"
 
-2. Ensure prerequisites:
-   - Git installed and configured
-   - PowerShell 5.1 or later
-   - .NET Framework 4.5+
-
-3. Run the script:
-```powershell
+# Run the PowerShell script
 .\Git_Loop.ps1
 ```
 
-### First Run Process
-
-```mermaid
-graph TD
-    Start[Start Script] --> Check{Config Exists?}
-    Check -->|No| Init[Initialize Configuration]
-    Init --> Username[Detect Git Username]
-    Username --> SSH[Check SSH Keys]
-    SSH --> Create[Create Config File]
-    Create --> Backup[Create Config Backup]
-    Backup --> Done[Start Monitoring]
-    
-    Check -->|Yes| Load[Load Existing Config]
-    Load --> Backup
-```
-
-## ⚙️ Configuration
-
-The tool uses a JSON configuration file with the following structure:
-
+### Configuration
+Windows-specific configuration file (`config`):
 ```json
 {
     "Repositories": [
         {
-            "Name": "Repository Name",
-            "Path": "D:\\Path\\To\\Repository",
+            "Name": "Git Loop",
+            "Path": "D:\\Projects\\Git Loop",
             "Branch": "main",
             "RemoteUrl": "git@github.com:username/repo.git",
             "AutoSync": true
@@ -123,125 +120,60 @@ The tool uses a JSON configuration file with the following structure:
 }
 ```
 
-### 📁 Directory Structure
-
+### Windows Directory Structure
 ```
 Git Loop/
-├── Git_Loop.ps1      # Main script
-├── config            # Your configuration (ignored by Git)
+├── Git_Loop.ps1      # PowerShell main script
+├── config            # Windows-specific configuration
 ├── config.example    # Configuration template
-├── logs/            # Log directory
+├── logs/            # Windows log directory
 │   ├── GitLoop.log   # Operation logs
 │   └── config.backup # Configuration backup
 └── .gitignore       # Git ignore rules
 ```
 
-## 🔒 Security
+## 🔍 Current Limitations
 
-- Uses SSH for authentication
-- No credentials stored in script
-- Runs with your Git permissions
-- Configuration files not tracked in Git
+- Windows-only support
+- PowerShell dependency
+- Single user focus
+- Basic authentication
+- Local configuration only
 
-## 🔍 Troubleshooting
+## 🛠 Development Notes
 
-```mermaid
-graph TD
-    Issue[Issue Detected] --> Check{Check Type}
-    Check -->|Config| Config[Verify Configuration]
-    Check -->|Git| Git[Check Git Setup]
-    Check -->|Auth| Auth[Verify SSH Keys]
-    
-    Config --> Logs[Check Logs]
-    Git --> Logs
-    Auth --> Logs
-    
-    Logs --> Resolution{Fixed?}
-    Resolution -->|No| Support[Create Issue]
-    Resolution -->|Yes| Done[Problem Solved]
+### Current Implementation
+- PowerShell-based automation
+- Windows file system integration
+- Local Git operations
+- Single user authentication
+- Basic error handling
+
+### Commit Signatures
+All automatic commits are tagged with:
+```
+Git Loop (PowerShell) - [Operation Type]
 ```
 
-1. Run with verbose logging:
-```powershell
-.\Git_Loop.ps1 -Verbose
-```
-
-2. Check logs at `logs/GitLoop.log`
-3. Verify SSH key configuration
-4. Ensure Git is properly configured
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+Example commit messages:
+- "Git Loop (PowerShell) - Auto-sync repository"
+- "Git Loop (PowerShell) - Configuration backup"
+- "Git Loop (PowerShell) - Log rotation"
 
 ## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
+## 👤 Author
+
+Created by ih8sirdavi for personal Windows development workflow automation.
+
 ## 🙏 Acknowledgments
 
-- PowerShell Windows Forms
-- Git command line interface
-- Modern UI design principles
+- PowerShell scripting community
+- Git for Windows
+- Windows development tools
 
-## 🔮 Future Plans
+---
 
-```mermaid
-gantt
-    title Development Roadmap
-    dateFormat  YYYY-MM-DD
-    section Core Features
-    Cross-Platform Support     :a1, 2024-01-01, 90d
-    Enhanced UI               :a2, after a1, 60d
-    Advanced Git Operations   :a3, after a2, 45d
-
-    section Improvements
-    Conflict Resolution      :b1, 2024-01-15, 45d
-    Performance Optimization :b2, after b1, 30d
-    Security Enhancements    :b3, after b2, 30d
-```
-
-See [Future Enhancements](#future-enhancements) for detailed plans.
-
-## Future Enhancements
-
-- **Advanced Repository Management**
-  - Branch-specific configurations and policies
-  - Support for multiple branch monitoring
-  - Custom pre-commit and post-commit hooks
-  - Repository health checks and diagnostics
-
-- **Enhanced Conflict Resolution**
-  - Interactive conflict resolution interface
-  - Configurable conflict resolution strategies
-  - Backup creation before conflict resolution
-  - Visual diff tool integration
-
-- **Extended UI Features**
-  - Dark mode support
-  - Customizable UI themes
-  - Repository grouping and tagging
-  - Advanced filtering and search capabilities
-  - Performance metrics and analytics dashboard
-
-- **Security and Authentication**
-  - Credential manager integration
-  - Multi-factor authentication support
-  - SSH key management interface
-  - Repository access control lists
-
-- **Automation and Integration**
-  - CI/CD pipeline integration
-  - Webhook support for custom events
-  - Scheduled operations and maintenance
-  - Email/Slack notifications for important events
-
-- **Performance Optimizations**
-  - Parallel repository processing
-  - Incremental status updates
-  - Resource usage monitoring
-  - Network bandwidth optimization
+> **Future Updates**: While currently a Windows-specific PowerShell tool, Git Loop is planned to evolve into a comprehensive, cross-platform team development platform. Stay tuned for updates!
