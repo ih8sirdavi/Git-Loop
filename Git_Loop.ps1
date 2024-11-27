@@ -287,17 +287,39 @@ foreach ($status in $repoStatusImages.Keys) {
     $imageList.Images.Add($status, $repoStatusImages[$status])
 }
 
-# Modern UI Colors
-$colors = @{
-    Background = [System.Drawing.Color]::FromArgb(248, 248, 248)
-    ButtonBackground = [System.Drawing.Color]::FromArgb(240, 240, 240)
-    ButtonHover = [System.Drawing.Color]::FromArgb(230, 230, 230)
-    ButtonBorder = [System.Drawing.Color]::FromArgb(210, 210, 210)
-    TextPrimary = [System.Drawing.Color]::FromArgb(60, 60, 60)
-    TextSecondary = [System.Drawing.Color]::FromArgb(120, 120, 120)
-    StatusBar = [System.Drawing.Color]::FromArgb(245, 245, 245)
-    LogBackground = [System.Drawing.Color]::White
-    SelectedItem = [System.Drawing.Color]::FromArgb(220, 220, 220)
+# Theme definitions
+$script:themes = @{
+    Light = @{
+        Background = [System.Drawing.Color]::FromArgb(248, 248, 248)
+        TextPrimary = [System.Drawing.Color]::FromArgb(60, 60, 60)
+        TextSecondary = [System.Drawing.Color]::FromArgb(120, 120, 120)
+        ButtonBackground = [System.Drawing.Color]::FromArgb(240, 240, 240)
+        ButtonHover = [System.Drawing.Color]::FromArgb(230, 230, 230)
+        ButtonBorder = [System.Drawing.Color]::FromArgb(200, 200, 200)
+        Success = [System.Drawing.Color]::FromArgb(40, 167, 69)
+        Error = [System.Drawing.Color]::FromArgb(220, 53, 69)
+        Warning = [System.Drawing.Color]::FromArgb(255, 193, 7)
+    }
+    Dark = @{
+        Background = [System.Drawing.Color]::FromArgb(30, 30, 30)
+        TextPrimary = [System.Drawing.Color]::FromArgb(240, 240, 240)
+        TextSecondary = [System.Drawing.Color]::FromArgb(180, 180, 180)
+        ButtonBackground = [System.Drawing.Color]::FromArgb(45, 45, 45)
+        ButtonHover = [System.Drawing.Color]::FromArgb(60, 60, 60)
+        ButtonBorder = [System.Drawing.Color]::FromArgb(70, 70, 70)
+        Success = [System.Drawing.Color]::FromArgb(40, 167, 69)
+        Error = [System.Drawing.Color]::FromArgb(220, 53, 69)
+        Warning = [System.Drawing.Color]::FromArgb(255, 193, 7)
+    }
+}
+
+# Current theme (default to Light)
+$script:currentTheme = "Light"
+
+# Load theme from config if exists
+if ($config.Theme) {
+    $script:currentTheme = $config.Theme
+    Write-Verbose "Loaded theme preference from config: $script:currentTheme"
 }
 
 # Create the form with modern styling
@@ -307,7 +329,6 @@ $form.Size = New-Object System.Drawing.Size(1000,700)
 $form.StartPosition = 'CenterScreen'
 $form.FormBorderStyle = 'Sizable'
 $form.MinimumSize = New-Object System.Drawing.Size(800,600)
-$form.BackColor = $colors.Background
 $form.Font = New-Object System.Drawing.Font("Segoe UI", 9)
 
 # Create main TableLayoutPanel for layout
@@ -345,16 +366,11 @@ $repoListView.GridLines = $false
 $repoListView.HeaderStyle = [System.Windows.Forms.ColumnHeaderStyle]::None
 $repoListView.Dock = [System.Windows.Forms.DockStyle]::Fill
 $repoListView.Font = New-Object System.Drawing.Font("Segoe UI", 9)
-$repoListView.BackColor = $colors.LogBackground
-$repoListView.ForeColor = $colors.TextPrimary
-$repoListView.BorderStyle = [System.Windows.Forms.BorderStyle]::None
-$repoListView.HoverSelection = $true
 $repoListView.SmallImageList = $imageList
 $repoGroupBox.Controls.Add($repoListView)
 
 # Add columns
 [void]$repoListView.Columns.Add("Name", 200)
-$repoGroupBox.Controls.Add($repoListView)
 
 # Populate repository ListView
 $config.Repositories | ForEach-Object {
@@ -549,8 +565,6 @@ $statusBox.ScrollBars = 'Vertical'
 $statusBox.ReadOnly = $true
 $statusBox.Dock = [System.Windows.Forms.DockStyle]::Fill
 $statusBox.Font = New-Object System.Drawing.Font("Consolas", 9)
-$statusBox.BackColor = $colors.LogBackground
-$statusBox.ForeColor = $colors.TextPrimary
 $statusBox.BorderStyle = [System.Windows.Forms.BorderStyle]::FixedSingle
 $statusGroupBox.Controls.Add($statusBox)
 
@@ -574,8 +588,6 @@ $detailsBox.ScrollBars = 'Vertical'
 $detailsBox.ReadOnly = $true
 $detailsBox.Dock = [System.Windows.Forms.DockStyle]::Fill
 $detailsBox.Font = New-Object System.Drawing.Font("Consolas", 9)
-$detailsBox.BackColor = $colors.LogBackground
-$detailsBox.ForeColor = $colors.TextPrimary
 $detailsBox.BorderStyle = [System.Windows.Forms.BorderStyle]::FixedSingle
 $detailsGroupBox.Controls.Add($detailsBox)
 
@@ -590,11 +602,9 @@ $leftPanel.Controls.Add($buttonPanel)
 # Create modern styled buttons
 $startButton = New-Object System.Windows.Forms.Button
 $startButton.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
-$startButton.BackColor = $colors.ButtonBackground
-$startButton.ForeColor = $colors.TextPrimary
 $startButton.Font = New-Object System.Drawing.Font("Segoe UI", 9)
-$startButton.FlatAppearance.BorderColor = $colors.ButtonBorder
-$startButton.FlatAppearance.MouseOverBackColor = $colors.ButtonHover
+$startButton.FlatAppearance.BorderColor = [System.Drawing.Color]::FromArgb(200, 200, 200)
+$startButton.FlatAppearance.MouseOverBackColor = [System.Drawing.Color]::FromArgb(230, 230, 230)
 $startButton.Height = 30
 $startButton.UseVisualStyleBackColor = $false
 $startButton.Margin = New-Object System.Windows.Forms.Padding(5)
@@ -603,11 +613,9 @@ $buttonPanel.Controls.Add($startButton)
 
 $stopButton = New-Object System.Windows.Forms.Button
 $stopButton.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
-$stopButton.BackColor = [System.Drawing.Color]::FromArgb(200,0,0)
-$stopButton.ForeColor = $colors.TextPrimary
 $stopButton.Font = New-Object System.Drawing.Font("Segoe UI", 9)
-$stopButton.FlatAppearance.BorderColor = $colors.ButtonBorder
-$stopButton.FlatAppearance.MouseOverBackColor = $colors.ButtonHover
+$stopButton.FlatAppearance.BorderColor = [System.Drawing.Color]::FromArgb(200, 200, 200)
+$stopButton.FlatAppearance.MouseOverBackColor = [System.Drawing.Color]::FromArgb(230, 230, 230)
 $stopButton.Height = 30
 $stopButton.UseVisualStyleBackColor = $false
 $stopButton.Margin = New-Object System.Windows.Forms.Padding(5)
@@ -617,11 +625,9 @@ $buttonPanel.Controls.Add($stopButton)
 
 $clearButton = New-Object System.Windows.Forms.Button
 $clearButton.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
-$clearButton.BackColor = [System.Drawing.Color]::FromArgb(100,100,100)
-$clearButton.ForeColor = $colors.TextPrimary
 $clearButton.Font = New-Object System.Drawing.Font("Segoe UI", 9)
-$clearButton.FlatAppearance.BorderColor = $colors.ButtonBorder
-$clearButton.FlatAppearance.MouseOverBackColor = $colors.ButtonHover
+$clearButton.FlatAppearance.BorderColor = [System.Drawing.Color]::FromArgb(200, 200, 200)
+$clearButton.FlatAppearance.MouseOverBackColor = [System.Drawing.Color]::FromArgb(230, 230, 230)
 $clearButton.Height = 30
 $clearButton.UseVisualStyleBackColor = $false
 $clearButton.Margin = New-Object System.Windows.Forms.Padding(5)
@@ -632,10 +638,8 @@ $buttonPanel.Controls.Add($clearButton)
 $statusStrip = New-Object System.Windows.Forms.StatusStrip
 $statusLabel = New-Object System.Windows.Forms.ToolStripStatusLabel
 $statusLabel.Text = "Ready"
-$statusLabel.ForeColor = $colors.TextSecondary
 $statusLabel.Font = New-Object System.Drawing.Font("Segoe UI", 9)
 $statusStrip.Items.Add($statusLabel)
-$statusStrip.BackColor = $colors.StatusBar
 $form.Controls.Add($statusStrip)
 
 # Create progress bar
@@ -875,285 +879,6 @@ function Start-JobMonitor {
     }
 }
 
-# Function to update repository details with better formatting
-function Update-RepositoryDetails {
-    param(
-        [Parameter(Mandatory=$true)]
-        [string]$repoName
-    )
-    
-    Write-Verbose "Starting repository details update for $repoName"
-    
-    try {
-        $repoConfig = $config.Repositories | Where-Object { $_.Name -eq $repoName }
-        if (-not $repoConfig) { 
-            Write-Verbose "Repository configuration not found for $repoName"
-            return 
-        }
-
-        Write-Verbose "Changing directory to $($repoConfig.Path)"
-        Set-Location $repoConfig.Path
-
-        # Get repository status with verbose logging
-        Write-Verbose "Fetching git status for $repoName"
-        $status = git status --porcelain
-        
-        Write-Verbose "Getting branch information"
-        $branch = git rev-parse --abbrev-ref HEAD 2>$null
-        if ($LASTEXITCODE -ne 0) { Write-Verbose "Failed to get branch name" }
-        
-        Write-Verbose "Calculating ahead/behind commits"
-        $ahead = git rev-list origin/$branch..HEAD --count 2>$null
-        if ($LASTEXITCODE -ne 0) { Write-Verbose "Failed to calculate ahead commits" }
-        
-        $behind = git rev-list HEAD..origin/$branch --count 2>$null
-        if ($LASTEXITCODE -ne 0) { Write-Verbose "Failed to calculate behind commits" }
-        
-        Write-Verbose "Getting last commit"
-        $lastCommit = git log -1 --format="%h - %s [%ar]" 2>$null
-        if ($LASTEXITCODE -ne 0) { Write-Verbose "Failed to get last commit" }
-        
-        Write-Verbose "Getting remote URL"
-        $remoteUrl = git config --get remote.origin.url 2>$null
-        if ($LASTEXITCODE -ne 0) { Write-Verbose "Failed to get remote URL" }
-
-        # Build details string with safe characters
-        Write-Verbose "Building details string"
-        $details = [System.Text.StringBuilder]::new()
-        [void]$details.AppendLine("[Repository] $repoName")
-        [void]$details.AppendLine("[Remote] $remoteUrl")
-        [void]$details.AppendLine("[Branch] $branch")
-        [void]$details.AppendLine("")
-        [void]$details.AppendLine("Status:")
-        [void]$details.AppendLine("  * Ahead by: $ahead commit(s)")
-        [void]$details.AppendLine("  * Behind by: $behind commit(s)")
-        [void]$details.AppendLine("")
-        [void]$details.AppendLine("Last Commit:")
-        [void]$details.AppendLine("  $lastCommit")
-        
-        if ($status) {
-            Write-Verbose "Adding working tree changes"
-            [void]$details.AppendLine("")
-            [void]$details.AppendLine("Working Tree Changes:")
-            $status -split "`n" | Where-Object { $_ } | ForEach-Object {
-                [void]$details.AppendLine("  $($_)")
-            }
-        }
-
-        Write-Verbose "Updating details box text"
-        Update-UI {
-            $detailsBox.Text = $details.ToString()
-        }
-    }
-    catch {
-        $errorMessage = "Unable to fetch repository details: $_"
-        Write-Verbose "Error in Update-RepositoryDetails: $errorMessage"
-        Update-UI {
-            $detailsBox.Text = $errorMessage
-        }
-    }
-    finally {
-        Write-Verbose "Finished updating repository details for $repoName"
-    }
-}
-
-# Function to verify if a commit was made by Git Loop
-function Test-GitLoopCommit {
-    param(
-        [Parameter(Mandatory=$true)]
-        [string]$CommitHash
-    )
-    
-    try {
-        # Get commit message
-        $commitMessage = git show -s --format=%B $CommitHash 2>$null
-        if ($LASTEXITCODE -ne 0) {
-            Write-Verbose "Failed to get commit message for hash: $CommitHash"
-            return $false
-        }
-
-        # Check for Git Loop signature
-        if (-not ($commitMessage -match "^Git Loop \(PowerShell\) - Auto-sync")) {
-            Write-Verbose "Commit does not have Git Loop signature"
-            return $false
-        }
-
-        # Validate commit structure
-        $requiredFields = @(
-            "- Repository:",
-            "- Timestamp:",
-            "- Branch:"
-        )
-
-        foreach ($field in $requiredFields) {
-            if (-not ($commitMessage -match $field)) {
-                Write-Verbose "Commit missing required field: $field"
-                return $false
-            }
-        }
-
-        Write-Verbose "Valid Git Loop commit detected"
-        return $true
-    }
-    catch {
-        Write-Error "Error checking commit: $_"
-        return $false
-    }
-}
-
-# Function to get last Git Loop commit
-function Get-LastGitLoopCommit {
-    try {
-        # Get all commits
-        $commits = git log --format="%H" -n 10 2>$null
-        if ($LASTEXITCODE -ne 0) {
-            throw "Failed to get commit history"
-        }
-
-        # Check each commit
-        foreach ($commit in $commits -split "`n") {
-            if (Test-GitLoopCommit -CommitHash $commit) {
-                Write-Verbose "Found last Git Loop commit: $commit"
-                return $commit
-            }
-        }
-
-        Write-Verbose "No Git Loop commits found in recent history"
-        return $null
-    }
-    catch {
-        Write-Error "Error finding last Git Loop commit: $_"
-        return $null
-    }
-}
-
-# Function to sync a Git repository with retry and status updates
-function Sync-GitRepository {
-    param([string]$repoName)
-    
-    $repo = $config.Repositories | Where-Object { $_.Name -eq $repoName }
-    if (-not $repo) {
-        throw "Repository $repoName not found in configuration"
-    }
-
-    Write-Verbose "Starting sync for $repoName"
-    
-    try {
-        # Change to repository directory
-        Push-Location $repo.Path
-        Write-Verbose "Changed to directory: $($repo.Path)"
-
-        # Verify Git repository
-        if (-not (Test-Path ".git")) {
-            throw "Directory is not a Git repository: $($repo.Path)"
-        }
-
-        # Verify remote URL
-        $currentRemote = git remote get-url origin 2>$null
-        if ($LASTEXITCODE -ne 0) {
-            throw "Failed to get remote URL: Repository may not be properly configured"
-        }
-        if ($currentRemote -ne $repo.RemoteUrl) {
-            Write-Verbose "Updating remote URL for $repoName"
-            git remote set-url origin $repo.RemoteUrl
-            if ($LASTEXITCODE -ne 0) {
-                throw "Failed to update remote URL"
-            }
-        }
-
-        # Verify current branch
-        $currentBranch = git rev-parse --abbrev-ref HEAD 2>$null
-        if ($LASTEXITCODE -ne 0) {
-            throw "Failed to get current branch"
-        }
-        if ($currentBranch -ne $repo.Branch) {
-            Write-Verbose "Switching to branch $($repo.Branch)"
-            git checkout $repo.Branch 2>$null
-            if ($LASTEXITCODE -ne 0) {
-                throw "Failed to switch to branch $($repo.Branch)"
-            }
-        }
-
-        # Fetch latest changes
-        Write-Verbose "Fetching latest changes"
-        git fetch origin 2>$null
-        if ($LASTEXITCODE -ne 0) {
-            throw "Failed to fetch from remote"
-        }
-
-        # Stage changes
-        Write-Verbose "Staging changes"
-        git add -A 2>$null
-        if ($LASTEXITCODE -ne 0) {
-            throw "Failed to stage changes"
-        }
-        
-        # Check for changes
-        $status = git status --porcelain
-        if ($status) {
-            Write-Verbose "Changes detected, creating commit"
-            
-            # Create commit message with Git Loop signature
-            $timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
-            $commitMessage = @"
-Git Loop (PowerShell) - Auto-sync
-
-- Repository: $repoName
-- Timestamp: $timestamp
-- Branch: $($repo.Branch)
-"@
-            
-            # Commit changes
-            git commit -m $commitMessage 2>$null
-            if ($LASTEXITCODE -ne 0) {
-                throw "Failed to commit changes"
-            }
-            
-            # Verify commit was created properly
-            $lastCommit = Get-LastGitLoopCommit
-            if (-not $lastCommit) {
-                Write-Warning "Last commit does not have Git Loop signature"
-            } else {
-                Write-Verbose "Verified Git Loop commit signature"
-            }
-            
-            Log-Message "Created Git Loop commit" -repository $repoName
-            
-            # Push changes
-            Write-Verbose "Pushing changes"
-            git push origin $repo.Branch 2>$null
-            if ($LASTEXITCODE -ne 0) {
-                throw "Failed to push changes"
-            }
-            Log-Message "Pushed changes to remote" -repository $repoName
-        } else {
-            Write-Verbose "No changes to commit"
-        }
-
-        # Pull latest changes
-        Write-Verbose "Pulling latest changes"
-        git pull origin $repo.Branch 2>$null
-        if ($LASTEXITCODE -ne 0) {
-            throw "Failed to pull latest changes"
-        }
-        
-        Log-Message "Repository sync completed successfully" -repository $repoName
-        Update-RepositoryStatus -repoName $repoName -status "Success"
-    }
-    catch {
-        $errorMessage = "Sync failed: $($_.Exception.Message)"
-        Write-Error $errorMessage
-        Log-Message $errorMessage -repository $repoName -isError $true
-        Update-RepositoryStatus -repoName $repoName -status "Error"
-        throw $errorMessage
-    }
-    finally {
-        # Always return to original directory
-        Pop-Location
-        Write-Verbose "Returned to original directory"
-    }
-}
-
 # Timer for periodic sync
 $timer = New-Object System.Windows.Forms.Timer
 $timer.Interval = $config.SyncInterval * 1000  # Convert to milliseconds
@@ -1237,6 +962,114 @@ Remote: $($_.RemoteUrl)
 "@
     $tooltips.SetToolTip($repoListView, $tooltipText)
 }
+
+# Theme button
+$themeButton = New-Object System.Windows.Forms.Button
+$themeButton.Text = " Toggle Theme"
+$themeButton.Width = 120
+$themeButton.Height = 30
+$themeButton.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+$themeButton.Add_Click({ Switch-Theme })
+$buttonPanel.Controls.Add($themeButton)
+
+# Function to toggle theme
+function Switch-Theme {
+    $script:currentTheme = if ($script:currentTheme -eq "Light") { "Dark" } else { "Light" }
+    $theme = $script:themes[$script:currentTheme]
+    
+    Write-Verbose "Switching to $script:currentTheme theme"
+    
+    # Update form
+    $form.BackColor = $theme.Background
+    $form.ForeColor = $theme.TextPrimary
+    
+    # Update repository list
+    $repoListView.BackColor = $theme.Background
+    $repoListView.ForeColor = $theme.TextPrimary
+    
+    # Update details box
+    $detailsBox.BackColor = $theme.Background
+    $detailsBox.ForeColor = $theme.TextPrimary
+    
+    # Update status box
+    $statusBox.BackColor = $theme.Background
+    $statusBox.ForeColor = $theme.TextPrimary
+    
+    # Update buttons
+    $startButton.BackColor = $theme.ButtonBackground
+    $startButton.ForeColor = $theme.TextPrimary
+    $startButton.FlatAppearance.BorderColor = $theme.ButtonBorder
+    $startButton.FlatAppearance.MouseOverBackColor = $theme.ButtonHover
+    
+    $stopButton.BackColor = $theme.ButtonBackground
+    $stopButton.ForeColor = $theme.TextPrimary
+    $stopButton.FlatAppearance.BorderColor = $theme.ButtonBorder
+    $stopButton.FlatAppearance.MouseOverBackColor = $theme.ButtonHover
+    
+    $clearButton.BackColor = $theme.ButtonBackground
+    $clearButton.ForeColor = $theme.TextPrimary
+    $clearButton.FlatAppearance.BorderColor = $theme.ButtonBorder
+    $clearButton.FlatAppearance.MouseOverBackColor = $theme.ButtonHover
+    
+    $themeButton.BackColor = $theme.ButtonBackground
+    $themeButton.ForeColor = $theme.TextPrimary
+    $themeButton.FlatAppearance.BorderColor = $theme.ButtonBorder
+    $themeButton.FlatAppearance.MouseOverBackColor = $theme.ButtonHover
+    
+    # Update status strip
+    $statusStrip.BackColor = $theme.Background
+    $statusLabel.ForeColor = $theme.TextSecondary
+    
+    # Save theme preference
+    $config | Add-Member -NotePropertyName "Theme" -NotePropertyValue $script:currentTheme -Force
+    $config | ConvertTo-Json -Depth 10 | Set-Content $configPath
+    Write-Verbose "Theme preference saved to config"
+}
+
+# Apply initial theme
+$theme = $script:themes[$script:currentTheme]
+Write-Verbose "Applying initial theme: $script:currentTheme"
+
+# Apply theme to form
+$form.BackColor = $theme.Background
+$form.ForeColor = $theme.TextPrimary
+
+# Apply theme to repository list
+$repoListView.BackColor = $theme.Background
+$repoListView.ForeColor = $theme.TextPrimary
+
+# Apply theme to details box
+$detailsBox.BackColor = $theme.Background
+$detailsBox.ForeColor = $theme.TextPrimary
+
+# Apply theme to status box
+$statusBox.BackColor = $theme.Background
+$statusBox.ForeColor = $theme.TextPrimary
+
+# Apply theme to buttons
+$startButton.BackColor = $theme.ButtonBackground
+$startButton.ForeColor = $theme.TextPrimary
+$startButton.FlatAppearance.BorderColor = $theme.ButtonBorder
+$startButton.FlatAppearance.MouseOverBackColor = $theme.ButtonHover
+
+$stopButton.BackColor = $theme.ButtonBackground
+$stopButton.ForeColor = $theme.TextPrimary
+$stopButton.FlatAppearance.BorderColor = $theme.ButtonBorder
+$stopButton.FlatAppearance.MouseOverBackColor = $theme.ButtonHover
+
+$clearButton.BackColor = $theme.ButtonBackground
+$clearButton.ForeColor = $theme.TextPrimary
+$clearButton.FlatAppearance.BorderColor = $theme.ButtonBorder
+$clearButton.FlatAppearance.MouseOverBackColor = $theme.ButtonHover
+
+$themeButton.BackColor = $theme.ButtonBackground
+$themeButton.ForeColor = $theme.TextPrimary
+$themeButton.FlatAppearance.BorderColor = $theme.ButtonBorder
+$themeButton.FlatAppearance.MouseOverBackColor = $theme.ButtonHover
+
+# Apply theme to status strip
+$statusStrip.BackColor = $theme.Background
+$statusLabel.ForeColor = $theme.TextSecondary
 
 # Check dependencies before starting
 function Test-Dependencies {
