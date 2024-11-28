@@ -160,6 +160,54 @@ Testing buffered logging system (v4):
 
 Last test: 2024-11-27 21:30
 
+## 🧪 Recent Changes
+
+### v1.2.0 - Memory-Based Logging
+- Implemented in-memory log buffering
+  * Logs stored in memory during monitoring
+  * Written to file only when monitoring stops or app closes
+  * Separate error logging with stack traces
+  * Real-time UI updates maintained
+- Enhanced Theme System
+  * Modern light theme with clean aesthetics
+  * Deep dark theme with reduced eye strain
+  * Consistent status colors across themes
+- Improved Git Management
+  * Better .gitignore rules
+  * Protected sensitive files
+  * Cleaned up repository state
+
+### Known Issues
+- Memory usage may grow with long monitoring sessions
+- Logs lost if application crashes before writing
+- Occasional duplicate log entries during rapid operations
+- Theme changes require application restart
+
+### Upcoming Features
+1. Log System Enhancements
+   - Log rotation and cleanup
+   - Configurable retention policies
+   - Log level filtering
+   - Structured logging format
+
+2. UI Improvements
+   - Live theme switching
+   - Custom theme support
+   - Status icon improvements
+   - Better error visualization
+
+3. Performance Optimizations
+   - Smart buffer management
+   - Reduced memory footprint
+   - Faster repository scanning
+   - Optimized git operations
+
+4. Quality of Life
+   - Repository groups
+   - Sync profiles
+   - Quick actions menu
+   - Keyboard shortcuts
+
 ## ⚙️ Configuration
 
 The application can be configured through the `config` file. Here are the key settings:
