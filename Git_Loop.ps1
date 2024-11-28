@@ -832,47 +832,334 @@ $clearButton.FlatAppearance.MouseOverBackColor = $theme.ButtonHover
 $statusStrip.BackColor = $theme.Background
 $statusLabel.ForeColor = $theme.TextSecondary
 
-# Initialize script-scope variables
-$script:Config = $null
-$script:ResourceMonitor = $null
-$script:PerformanceMetrics = @{}
-$script:runningJobs = @{}
-$script:LastRepoOperation = @{}
-$script:RepoOperationLock = [System.Collections.Concurrent.ConcurrentDictionary[string, bool]]::new()
-$script:MinOperationInterval = 500 # Milliseconds
-
-function Initialize-JobManagement {
-    $script:runningJobs = @{}
-    $script:LastRepoOperation = @{}
-    Write-Log -Message "Job management initialized" -Level "INFO"
-}
-
-function Start-RepositoryJob {
+# Function to update repository details with better formatting
+function Update-RepositoryDetails {
     param(
-        [string]$RepoPath,
-        [string]$Operation
+        [Parameter(Mandatory=$true)]
+        [string]$repoName
     )
     
+    Write-Verbose "Starting repository details update for $repoName"
+    
     try {
-        if (-not $script:runningJobs) {
-            Initialize-JobManagement
+        $repoConfig = $config.Repositories | Where-Object { $_.Name -eq $repoName }
+        if (-not $repoConfig) { 
+            Write-Verbose "Repository configuration not found for $repoName"
+            return 
         }
 
-        $repoName = Split-Path $RepoPath -Leaf
+        Write-Verbose "Changing directory to $($repoConfig.Path)"
+        Push-Location $repoConfig.Path
+
+        # Get repository status with verbose logging
+        Write-Verbose "Fetching git status for $repoName"
+        $status = git status --porcelain
         
-        if (-not $script:runningJobs.ContainsKey($repoName)) {
-            $script:runningJobs[$repoName] = @{
-                Job = $null
-                StartTime = Get-Date
-                Status = "Pending"
+        Write-Verbose "Getting branch information"
+        $branch = git rev-parse --abbrev-ref HEAD 2>$null
+        if ($LASTEXITCODE -ne 0) { Write-Verbose "Failed to get branch name" }
+        
+        Write-Verbose "Calculating ahead/behind commits"
+        $ahead = git rev-list origin/$branch..HEAD --count 2>$null
+        if ($LASTEXITCODE -ne 0) { Write-Verbose "Failed to calculate ahead commits" }
+        
+        $behind = git rev-list HEAD..origin/$branch --count 2>$null
+        if ($LASTEXITCODE -ne 0) { Write-Verbose "Failed to calculate behind commits" }
+        
+        Write-Verbose "Getting last commit"
+        $lastCommit = git log -1 --format="%h - %s [%ar]" 2>$null
+        if ($LASTEXITCODE -ne 0) { Write-Verbose "Failed to get last commit" }
+        
+        Write-Verbose "Getting remote URL"
+        $remoteUrl = git config --get remote.origin.url 2>$null
+        if ($LASTEXITCODE -ne 0) { Write-Verbose "Failed to get remote URL" }
+
+        # Build details string with safe characters
+        Write-Verbose "Building details string"
+        $details = [System.Text.StringBuilder]::new()
+        [void]$details.AppendLine("[Repository] $repoName")
+        [void]$details.AppendLine("[Remote] $remoteUrl")
+        [void]$details.AppendLine("[Branch] $branch")
+        [void]$details.AppendLine("")
+        [void]$details.AppendLine("Status:")
+        [void]$details.AppendLine("  * Ahead by: $ahead commit(s)")
+        [void]$details.AppendLine("  * Behind by: $behind commit(s)")
+        [void]$details.AppendLine("")
+        [void]$details.AppendLine("Last Commit:")
+        [void]$details.AppendLine("  $lastCommit")
+        
+        if ($status) {
+            Write-Verbose "Adding working tree changes"
+            [void]$details.AppendLine("")
+            [void]$details.AppendLine("Working Tree Changes:")
+            $status -split "`n" | Where-Object { $_ } | ForEach-Object {
+                [void]$details.AppendLine("  $($_)")
             }
         }
-        
-        # Rest of the function...
+
+        Write-Verbose "Updating details box text"
+        Update-UI {
+            $detailsBox.Text = $details.ToString()
+        }
     }
     catch {
-        Write-Log -Message "Error in repository operation: $_" -Level "ERROR"
-        return $false
+        $errorMessage = "Unable to fetch repository details: $_"
+        Write-Verbose "Error in Update-RepositoryDetails: $errorMessage"
+        Update-UI {
+            $detailsBox.Text = $errorMessage
+        }
+    }
+    finally {
+        Pop-Location
+        Write-Verbose "Finished updating repository details for $repoName"
+    }
+}
+
+# Retry operation with exponential backoff
+function Retry-Operation {
+    param(
+        [Parameter(Mandatory=$true)]
+        [scriptblock]$Operation,
+        [string]$OperationName = "Operation",
+        [int]$MaxRetries = 3,
+        [int]$InitialDelay = 2,
+        [string]$Repository = ""
+    )
+    
+    $delay = $InitialDelay
+    $retryCount = 0
+    $success = $false
+    
+    do {
+        try {
+            & $Operation
+            $success = $true
+            break
+        }
+        catch {
+            $retryCount++
+            if ($retryCount -ge $MaxRetries) {
+                Log-Error "Failed after $MaxRetries retries: $OperationName" -repository $Repository -errorRecord $_
+                throw
+            }
+            
+            Log-Message "Retry $retryCount/$MaxRetries for $OperationName (waiting ${delay}s)" -repository $Repository -type "WARNING"
+            Start-Sleep -Seconds $delay
+            $delay *= 2  # Exponential backoff
+        }
+    } while (-not $success -and $retryCount -lt $MaxRetries)
+    
+    return $success
+}
+
+# Function to sync a Git repository
+function Sync-GitRepository {
+    param([string]$repoName)
+    
+    $repo = $config.Repositories | Where-Object { $_.Name -eq $repoName }
+    if (-not $repo) {
+        Log-Error "Repository not found in configuration" -repository $repoName
+        return
+    }
+    
+    try {
+        Set-Location $repo.Path
+        
+        # Fetch latest changes
+        Retry-Operation -Operation {
+            $output = git fetch origin $repo.Branch 2>&1
+            if ($LASTEXITCODE -ne 0) {
+                # Only throw if it's a real error, not just fetch info output or CRLF warnings
+                $errorOutput = $output | Where-Object { 
+                    $_ -notmatch '^From ' -and 
+                    $_ -notmatch '^\* \[new branch\]' -and
+                    $_ -notmatch 'warning: .+ LF will be replaced by CRLF' -and
+                    $_ -notmatch 'warning: in the working copy of .+, CRLF will be replaced by LF'
+                }
+                if ($errorOutput) {
+                    throw "Failed to fetch from remote: $errorOutput"
+                }
+            }
+        } -OperationName "git fetch" -Repository $repoName
+        
+        # Check for local changes
+        $status = git status --porcelain
+        if ($status) {
+            # Stage all changes
+            Retry-Operation -Operation {
+                $output = git add -A 2>&1
+                if ($LASTEXITCODE -ne 0) {
+                    $errorOutput = $output | Where-Object {
+                        $_ -notmatch 'warning: .+ LF will be replaced by CRLF' -and
+                        $_ -notmatch 'warning: in the working copy of .+, CRLF will be replaced by LF'
+                    }
+                    if ($errorOutput) {
+                        throw "Failed to stage changes: $errorOutput"
+                    }
+                }
+            } -OperationName "git add" -Repository $repoName
+            
+            # Commit changes
+            Retry-Operation -Operation {
+                $output = git commit -m "Auto-commit: Local changes" 2>&1
+                if ($LASTEXITCODE -ne 0) {
+                    $errorOutput = $output | Where-Object {
+                        $_ -notmatch 'warning: .+ LF will be replaced by CRLF' -and
+                        $_ -notmatch 'warning: in the working copy of .+, CRLF will be replaced by LF'
+                    }
+                    if ($errorOutput) {
+                        throw "Failed to commit changes: $errorOutput"
+                    }
+                }
+            } -OperationName "git commit" -Repository $repoName
+        }
+        
+        # Pull changes (with rebase to handle conflicts)
+        Retry-Operation -Operation {
+            $output = git pull --rebase origin $repo.Branch 2>&1
+            if ($LASTEXITCODE -ne 0) {
+                $errorOutput = $output | Where-Object {
+                    $_ -notmatch 'warning: .+ LF will be replaced by CRLF' -and
+                    $_ -notmatch 'warning: in the working copy of .+, CRLF will be replaced by LF'
+                }
+                if ($errorOutput) {
+                    throw "Failed to pull changes: $errorOutput"
+                }
+            }
+        } -OperationName "git pull" -Repository $repoName
+        
+        # Push our changes if any
+        Retry-Operation -Operation {
+            $output = git push origin $repo.Branch 2>&1
+            if ($LASTEXITCODE -ne 0) {
+                $errorOutput = $output | Where-Object {
+                    $_ -notmatch 'warning: .+ LF will be replaced by CRLF' -and
+                    $_ -notmatch 'warning: in the working copy of .+, CRLF will be replaced by LF'
+                }
+                if ($errorOutput) {
+                    throw "Failed to push changes: $errorOutput"
+                }
+            }
+        } -OperationName "git push" -Repository $repoName
+        
+        Log-Message "Successfully synced repository" -repository $repoName
+    }
+    catch {
+        Log-Error "Error syncing repository: $_" -repository $repoName -errorRecord $_
+        throw
+    }
+    finally {
+        Set-Location $PSScriptRoot
+    }
+}
+
+# Start a background job for repository sync
+function Start-RepositoryJob {
+    param([string]$RepoName)
+    
+    $syncScript = ${function:Sync-GitRepository}.ToString()
+    $retryScript = ${function:Retry-Operation}.ToString()
+    $logScript = ${function:Log-Message}.ToString()
+    $logErrorScript = ${function:Log-Error}.ToString()
+    $updateStatusScript = ${function:Update-RepositoryStatus}.ToString()
+    
+    $job = Start-Job -ScriptBlock {
+        param($repoName, $config, $PSScriptRoot, $syncScript, $retryScript, $logScript, $logErrorScript, $updateStatusScript)
+        
+        # Load functions into job scope
+        ${function:Sync-GitRepository} = $syncScript
+        ${function:Retry-Operation} = $retryScript
+        ${function:Log-Message} = $logScript
+        ${function:Log-Error} = $logErrorScript
+        ${function:Update-RepositoryStatus} = $updateStatusScript
+        
+        # Run the sync operation
+        try {
+            Sync-GitRepository $repoName
+        }
+        catch {
+            Log-Error "Job failed: $_" -repository $repoName -errorRecord $_
+            throw
+        }
+    } -ArgumentList $RepoName, $config, $PSScriptRoot, $syncScript, $retryScript, $logScript, $logErrorScript, $updateStatusScript
+    
+    # Track the job
+    $script:runningJobs[$RepoName] = @{
+        Job = $job
+        StartTime = Get-Date
+        Name = $RepoName
+    }
+    
+    Log-Message "Started async operation: $RepoName" -type "INFO"
+    Show-Progress $true
+    Update-RepositoryStatus -repoName $RepoName -status "Syncing"
+    
+    # Start monitoring the job
+    Start-JobMonitor
+}
+
+# Function to show/hide progress
+function Show-Progress {
+    param([bool]$show)
+    Update-UI {
+        $progressBar.Visible = $show
+    }
+}
+
+# Function to monitor jobs
+function Start-JobMonitor {
+    if ($script:runningJobs.Count -eq 0) {
+        Show-Progress $false
+        return
+    }
+    
+    $jobsToRemove = @()
+    
+    foreach ($entry in $script:runningJobs.GetEnumerator()) {
+        $job = $entry.Value.Job
+        $name = $entry.Value.Name
+        $startTime = $entry.Value.StartTime
+        $repoName = $name
+        
+        if ($job.State -eq 'Completed') {
+            try {
+                $result = Receive-Job -Job $job -ErrorAction Stop
+                Log-Message "Operation completed: $name" -type "INFO"
+                Update-RepositoryStatus -repoName $repoName -status "Success"
+                Update-RepositoryDetails $repoName
+            }
+            catch {
+                Log-Error "Operation failed: $_" -repository $repoName -errorRecord $_
+                Update-RepositoryStatus -repoName $repoName -status "Error"
+            }
+            finally {
+                $jobsToRemove += $entry.Key
+                Remove-Job -Job $job
+            }
+        }
+        elseif ($job.State -eq 'Failed') {
+            Log-Error "Operation failed" -repository $repoName
+            Update-RepositoryStatus -repoName $repoName -status "Error"
+            $jobsToRemove += $entry.Key
+            Remove-Job -Job $job
+        }
+        elseif (((Get-Date) - $startTime).TotalSeconds -gt $config.JobTimeoutSeconds) {
+            Log-Error "Operation timed out after $($config.JobTimeoutSeconds) seconds" -repository $repoName
+            Update-RepositoryStatus -repoName $repoName -status "Error"
+            Stop-Job -Job $job
+            Remove-Job -Job $job
+            $jobsToRemove += $entry.Key
+        }
+    }
+    
+    # Remove completed/failed/timed out jobs
+    foreach ($key in $jobsToRemove) {
+        $script:runningJobs.Remove($key)
+    }
+    
+    # Hide progress if no jobs are running
+    if ($script:runningJobs.Count -eq 0) {
+        Show-Progress $false
     }
 }
 
@@ -1108,15 +1395,73 @@ if (-not (Test-Dependencies)) {
 # Show form
 $form.ShowDialog()
 
-# Initialize features based on config
-if ($config.ResourceMonitoring.Enabled) {
-    Initialize-ResourceMonitoring
+# Add these variables near the start of the script with other script-scope variables
+$script:LastRepoOperation = @{}
+$script:RepoOperationLock = [System.Collections.Concurrent.ConcurrentDictionary[string, bool]]::new()
+$script:MinOperationInterval = 500 # Milliseconds
+
+function Initialize-Configuration {
+    try {
+        $configPath = Join-Path $PSScriptRoot "config.json"
+        $configExamplePath = Join-Path $PSScriptRoot "config.example"
+        
+        # Create config from example if it doesn't exist
+        if (-not (Test-Path $configPath) -and (Test-Path $configExamplePath)) {
+            Copy-Item $configExamplePath $configPath
+            Write-Log -Message "Created new config file from example" -Level "INFO"
+        }
+        
+        if (Test-Path $configPath) {
+            $config = Get-Content $configPath -Raw | ConvertFrom-Json
+            
+            # Update config with any missing properties from example
+            if (Test-Path $configExamplePath) {
+                $example = Get-Content $configExamplePath -Raw | ConvertFrom-Json
+                $updated = Update-ConfigurationFromExample $config $example
+                if ($updated) {
+                    $config | ConvertTo-Json -Depth 10 | Set-Content $configPath
+                    Write-Log -Message "Updated config file with new settings" -Level "INFO"
+                }
+            }
+            
+            $script:Config = $config
+            
+            # Initialize features based on config
+            if ($config.ResourceMonitoring.Enabled) {
+                Initialize-ResourceMonitoring
+            }
+            
+            # Set operation intervals
+            $script:MinOperationInterval = [math]::Max(100, $config.MinOperationInterval)
+            
+            Write-Log -Message "Configuration initialized successfully" -Level "INFO"
+        } else {
+            throw "No config file found and couldn't create from example"
+        }
+    }
+    catch {
+        Write-Log -Message "Error initializing configuration: $_" -Level "ERROR"
+        throw
+    }
 }
 
-# Set operation intervals
-$script:MinOperationInterval = [math]::Max(100, $config.MinOperationInterval)
-
-Write-Log -Message "Configuration initialized successfully" -Level "INFO"
+function Update-ConfigurationFromExample {
+    param($Current, $Example)
+    
+    $updated = $false
+    $Example.PSObject.Properties | ForEach-Object {
+        $name = $_.Name
+        if (-not $Current.PSObject.Properties[$name]) {
+            Add-Member -InputObject $Current -MemberType NoteProperty -Name $name -Value $_.Value
+            $updated = $true
+        }
+        elseif ($_.Value -is [PSCustomObject] -and $Current.$name -is [PSCustomObject]) {
+            $subUpdated = Update-ConfigurationFromExample $Current.$name $_.Value
+            $updated = $updated -or $subUpdated
+        }
+    }
+    return $updated
+}
 
 function Initialize-ResourceMonitoring {
     $script:ResourceMonitor = [PSCustomObject]@{

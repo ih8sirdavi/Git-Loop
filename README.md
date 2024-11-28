@@ -223,12 +223,6 @@ The `JobTimeoutSeconds` setting controls how long Git Loop will wait for sync op
    - Adjust timeout duration if needed
    - Consider network and repository size
 
-## Test Update
-This is a test update to verify Git Loop's sync functionality with the new features.
-- Testing resource monitoring
-- Testing performance metrics
-- Testing auto-sync behavior
-
 ## 📁 Directory Structure
 
 ```
