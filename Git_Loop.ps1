@@ -1265,14 +1265,27 @@ $stopButton.Add_Click({
     Log-Message "Stopped monitoring repositories"
     
     # Write buffered logs to file
-    Set-Content -Path $config.LogFile -Value "# Git Loop Log File`n# This file contains logs for the current active session only"
-    Add-Content -Path $config.LogFile -Value $script:logBuffer
+    $logFile = Join-Path $logsDir $config.LogFile
+    if (Test-Path $logFile) {
+        $logContent = Get-Content $logFile
+        $logContent += $script:logBuffer
+        Set-Content -Path $logFile -Value $logContent
+    } else {
+        Set-Content -Path $logFile -Value "# Git Loop Log File`n# This file contains logs for the current active session only"
+        Add-Content -Path $logFile -Value $script:logBuffer
+    }
     
     # Write error logs if any
     if ($script:errorBuffer.Count -gt 0) {
         $errorLogPath = Join-Path $logsDir "errors.log"
-        Set-Content -Path $errorLogPath -Value "# Git Loop Error Log`n# This file contains errors for the current active session only"
-        Add-Content -Path $errorLogPath -Value $script:errorBuffer
+        if (Test-Path $errorLogPath) {
+            $errorLogContent = Get-Content $errorLogPath
+            $errorLogContent += $script:errorBuffer
+            Set-Content -Path $errorLogPath -Value $errorLogContent
+        } else {
+            Set-Content -Path $errorLogPath -Value "# Git Loop Error Log`n# This file contains errors for the current active session only"
+            Add-Content -Path $errorLogPath -Value $script:errorBuffer
+        }
     }
     
     # Clear the buffer
@@ -1311,14 +1324,26 @@ $form.Add_FormClosing({
     
     # Write buffered logs to file
     $logFile = Join-Path $logsDir $config.LogFile
-    Set-Content -Path $logFile -Value "# Git Loop Log File`n# This file contains logs for the current active session only"
-    Add-Content -Path $logFile -Value $script:logBuffer
+    if (Test-Path $logFile) {
+        $logContent = Get-Content $logFile
+        $logContent += $script:logBuffer
+        Set-Content -Path $logFile -Value $logContent
+    } else {
+        Set-Content -Path $logFile -Value "# Git Loop Log File`n# This file contains logs for the current active session only"
+        Add-Content -Path $logFile -Value $script:logBuffer
+    }
     
     # Write error logs if any
     if ($script:errorBuffer.Count -gt 0) {
         $errorLogPath = Join-Path $logsDir "errors.log"
-        Set-Content -Path $errorLogPath -Value "# Git Loop Error Log`n# This file contains errors for the current active session only"
-        Add-Content -Path $errorLogPath -Value $script:errorBuffer
+        if (Test-Path $errorLogPath) {
+            $errorLogContent = Get-Content $errorLogPath
+            $errorLogContent += $script:errorBuffer
+            Set-Content -Path $errorLogPath -Value $errorLogContent
+        } else {
+            Set-Content -Path $errorLogPath -Value "# Git Loop Error Log`n# This file contains errors for the current active session only"
+            Add-Content -Path $errorLogPath -Value $script:errorBuffer
+        }
     }
     
     # Clean up any running jobs
