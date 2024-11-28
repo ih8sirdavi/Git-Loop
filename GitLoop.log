@@ -1,8 +1,10 @@
 # Git Loop Log File
-# Session ended: 2024-11-27 21:30:10
-[2024-11-27 21:29:48][INFO] Started monitoring selected repositories
-[2024-11-27 21:29:48][INFO] Started async operation: Git Loop
-[2024-11-27 21:29:50][INFO][Masterlogs]  Repository Masterlogs added to sync list
-[2024-11-27 21:29:51][INFO][ANF]  Repository ANF added to sync list
-[2024-11-27 21:29:52][INFO][ANF]  Repository ANF removed from sync list
-[2024-11-27 21:30:10][INFO] Stopped monitoring repositories
+# This file contains logs for the current active session only
+[INFO] Started monitoring selected repositories
+[INFO] Started async operation: Git Loop
+[INFO][Masterlogs]  Repository Masterlogs added to sync list
+[INFO][ANF]  Repository ANF added to sync list
+[INFO][Masterlogs]  Repository Masterlogs removed from sync list
+[INFO][Masterlogs]  Repository Masterlogs added to sync list
+[INFO][ANF]  Repository ANF removed from sync list
+[INFO] Stopped monitoring repositories
