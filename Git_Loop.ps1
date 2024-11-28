@@ -1264,6 +1264,12 @@ $stopButton.Add_Click({
     $statusLabel.Text = "Monitoring stopped"
     $script:nextSyncTime = $null
     Log-Message "Stopped monitoring repositories"
+    
+    # Clear the log file when stopping monitoring
+    if (Test-Path $config.LogFile) {
+        Start-Sleep -Seconds 1  # Give time for final logs to be written
+        Clear-Content $config.LogFile
+    }
 })
 
 # Clear button click handler
@@ -1564,4 +1570,33 @@ function Start-RepositoryJob {
         Write-Log -Message ("Failed to start job for {0}: {1}" -f $repoName, $_.Exception.Message) -Level "ERROR"
         return $null
     }
+}
+
+function Start-MonitoringRepositories {
+    param (
+        [Parameter(Mandatory = $true)]
+        [System.Collections.ArrayList]$Repositories
+    )
+    
+    # Clear the log file when starting monitoring
+    if (Test-Path $config.LogFile) {
+        Clear-Content $config.LogFile
+        Write-Log "Log file cleared for new session" -Level "INFO"
+    }
+    
+    Write-Log "Started monitoring selected repositories" -Level "INFO"
+    {{ ... }}
+}
+
+function Stop-MonitoringRepositories {
+    Write-Log "Stopped monitoring repositories" -Level "INFO"
+    
+    # Clear the log file when stopping monitoring
+    if (Test-Path $config.LogFile) {
+        Start-Sleep -Seconds 1  # Give time for final logs to be written
+        Clear-Content $config.LogFile
+    }
+    
+    $script:MonitoringActive = $false
+    {{ ... }}
 }
