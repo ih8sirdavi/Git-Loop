@@ -13,6 +13,10 @@
 - ⚡ Asynchronous operations with progress tracking
 - 🛡️ Error handling with automatic retries
 - 🎨 Modern UI with light/dark theme support
+- 📈 Smart resource management
+- 📊 Enhanced performance metrics
+- 🔄 Parallel operation support
+- 🔒 Auto-stashing for conflicted changes
 
 ## ⚙️ Requirements
 
@@ -146,7 +150,38 @@ The application can be configured through the `config` file. Here are the key se
     "LogRetention": 100,
     "LogFile": "GitLoop.log",
     "MaxLogSize": "5MB",
-    "Theme": "Light"
+    "Theme": "Light",
+    "ResourceMonitoring": {
+        "Enabled": true,
+        "MaxCpuPercent": 80,
+        "MaxMemoryPercent": 75,
+        "CheckIntervalSeconds": 5
+    },
+    "ParallelOperations": {
+        "Enabled": true,
+        "MaxParallelJobs": 3
+    },
+    "NetworkChecks": {
+        "Enabled": true,
+        "TimeoutSeconds": 10,
+        "RetryAttempts": 3
+    },
+    "AutoStash": {
+        "Enabled": true,
+        "StashTimeout": 300
+    },
+    "Logging": {
+        "PerformanceMetrics": true,
+        "OperationTiming": true,
+        "ResourceUsage": true,
+        "DetailLevel": "Verbose"
+    },
+    "UI": {
+        "ShowProgress": true,
+        "ShowEstimates": true,
+        "ShowResourceUsage": true,
+        "RefreshIntervalMs": 500
+    }
 }
 ```
 
@@ -158,6 +193,12 @@ The application can be configured through the `config` file. Here are the key se
 - **LogRetention**: Number of log files to keep
 - **MaxLogSize**: Maximum size for log files
 - **Theme**: UI theme ("Light" or "Dark")
+- **ResourceMonitoring**: Enable resource monitoring
+- **ParallelOperations**: Enable parallel operations
+- **NetworkChecks**: Enable network checks
+- **AutoStash**: Enable auto-stashing for conflicted changes
+- **Logging**: Configure logging options
+- **UI**: Configure UI settings
 
 ### Job Timeout Behavior
 
@@ -251,7 +292,27 @@ The `.gitignore` is configured to maintain a clean repository while developing:
 
 ## 🔄 Version History
 
-- **v1.1.1** (Current)
+- **v1.2.0** (Current)
+  - **Smart Resource Management**
+    * Automatic CPU and Memory monitoring
+    * Dynamic operation throttling based on system load
+    * Configurable resource usage thresholds
+    * Parallel operation support with configurable limits
+
+  - **Enhanced Performance**
+    * Operation performance metrics tracking
+    * Smart retry mechanism with exponential backoff
+    * Network connectivity checks
+    * Improved operation scheduling
+    * Auto-stashing for conflicted changes
+
+  - **Configuration System**
+    * Auto-updating configuration system
+    * Backward compatibility maintenance
+    * Dynamic feature toggles
+    * Comprehensive logging options
+
+- **v1.1.1**
   - **Repository Management**
     * Added operation throttling (500ms minimum interval)
     * Implemented repository-specific locks
@@ -420,98 +481,60 @@ For issues and feature requests, please use the GitHub issues tracker.
   * Timeout protection
   * Status preservation
 
-## ⚙️ Configuration
+- **Smart Resource Management**
+  * Automatic CPU and Memory monitoring
+  * Dynamic operation throttling based on system load
+  * Configurable resource usage thresholds
+  * Parallel operation support with configurable limits
 
-The application uses a JSON configuration file (`config`) with these key settings:
+- **Enhanced Performance**
+  * Operation performance metrics tracking
+  * Smart retry mechanism with exponential backoff
+  * Network connectivity checks
+  * Improved operation scheduling
+  * Auto-stashing for conflicted changes
 
-```json
-{
-    "Repositories": [
-        {
-            "Name": "Git Loop",
-            "Path": ".",
-            "Branch": "main",
-            "RemoteUrl": "git@github.com:USERNAME/Git-Loop.git",
-            "AutoSync": true
-        }
-    ],
-    "SyncInterval": 30,
-    "MaxRetries": 3,
-    "JobTimeoutSeconds": 300,
-    "LogRetention": 100,
-    "LogFile": "GitLoop.log",
-    "MaxLogSize": "5MB",
-    "Theme": "Light"
-}
-```
+## Feature Benefits
 
-### Configuration Options
+1. **Improved Reliability**
+   - Smart retry mechanism prevents operation failures
+   - Network checks ensure connectivity before operations
+   - Resource monitoring prevents system overload
 
-- **SyncInterval**: Time between sync operations (seconds)
-- **MaxRetries**: Number of retry attempts for failed operations
-- **JobTimeoutSeconds**: Maximum duration for sync operations (default: 300s)
-- **LogRetention**: Number of log files to keep
-- **MaxLogSize**: Maximum size for log files
-- **Theme**: UI theme ("Light" or "Dark")
+2. **Better Performance**
+   - Parallel operations for faster processing
+   - Dynamic throttling based on system load
+   - Optimized operation scheduling
 
-### Job Timeout Behavior
+3. **Enhanced Monitoring**
+   - Comprehensive performance metrics
+   - Detailed resource usage tracking
+   - Operation timing statistics
 
-The `JobTimeoutSeconds` setting controls how long Git Loop will wait for sync operations to complete:
+4. **User Experience**
+   - Progress indicators for long operations
+   - Estimated completion times
+   - Resource usage visibility
+   - Clear operation status updates
 
-1. **Default Duration**: 5 minutes (300 seconds)
-2. **Timeout Actions**:
-   - Operation is forcefully stopped
-   - Error is logged with timeout duration
-   - Repository status updates to "Error"
-   - Job is cleaned up and removed
+## Best Practices
 
-3. **Common Timeout Scenarios**:
-   - Slow network connections
-   - Large repository syncs
-   - Git server unresponsiveness
-   - SSH authentication delays
+1. **Resource Management**
+   - Adjust `MaxCpuPercent` and `MaxMemoryPercent` based on your system
+   - Set `MaxParallelJobs` according to available resources
+   - Monitor `ResourceUsage` logs for optimization
 
-4. **Handling Timeouts**:
-   - Failed operations will retry on next sync cycle
-   - Check logs for detailed error messages
-   - Adjust timeout duration if needed
-   - Consider network and repository size
+2. **Operation Timing**
+   - Use `MinOperationInterval` to prevent overwhelming repositories
+   - Adjust `RetryBackoffMultiplier` for different network conditions
+   - Set appropriate `MaxRetryDelaySeconds` for your use case
 
-## 📁 Directory Structure
+3. **Network Handling**
+   - Enable `NetworkChecks` for unreliable connections
+   - Adjust `TimeoutSeconds` based on network speed
+   - Set `RetryAttempts` based on network stability
 
-```
-Git Loop/
-├── Git_Loop.ps1      # Main script
-├── config            # Configuration file
-├── config.example    # Example configuration
-├── README.md         # Documentation
-└── logs/            # Log directory
-    ├── GitLoop.log  # Main log file
-    └── errors.log   # Error log file
-```
-
-## 📝 Usage Tips
-
-1. **Repository Selection**
-   - Check/uncheck repositories to monitor
-   - Status updates in real-time
-   - Visual indicators show sync status
-   - Hover for repository details
-
-2. **Monitoring**
-   - Start/Stop monitoring with buttons
-   - View repository details and status
-   - Monitor sync progress
-   - Auto-timeout prevents stuck operations
-
-3. **Logs**
-   - Real-time operation logs in status window
-   - Detailed logs in `logs/GitLoop.log`
-   - Error logs in `logs/errors.log`
-   - Configuration backups in `logs/config.backup`
-
-4. **Performance**
-   - Adjust sync interval for your needs
-   - Configure timeouts based on repo size
-   - Use auto-sync selectively
-   - Monitor resource usage
+4. **Logging**
+   - Use `DetailLevel: Verbose` for troubleshooting
+   - Enable `PerformanceMetrics` to optimize settings
+   - Monitor `ResourceUsage` for system impact
