@@ -1,6 +1,8 @@
 # Git Loop Core
 /config
 !/config.example
+/logs/*
+!logs/.gitkeep
 
 # Git directories
 /.git/
