@@ -1394,3 +1394,140 @@ if (-not (Test-Dependencies)) {
 
 # Show form
 $form.ShowDialog()
+
+# Add these variables near the start of the script with other script-scope variables
+$script:LastRepoOperation = @{}
+$script:RepoOperationLock = [System.Collections.Concurrent.ConcurrentDictionary[string, bool]]::new()
+$script:MinOperationInterval = 500 # Milliseconds
+
+function Add-RepositoryToSync {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$RepoPath
+    )
+    
+    try {
+        $repoName = Split-Path $RepoPath -Leaf
+        
+        # Check if we're operating too quickly on this repo
+        $lastOp = $script:LastRepoOperation[$repoName]
+        $now = Get-Date
+        if ($lastOp -and ($now - $lastOp).TotalMilliseconds -lt $script:MinOperationInterval) {
+            Write-Log -Message "Operation on repository $repoName throttled - please wait" -Level "WARN"
+            return $false
+        }
+        
+        # Try to acquire lock for this repo
+        if (-not $script:RepoOperationLock.TryAdd($repoName, $true)) {
+            Write-Log -Message "Repository $repoName is currently being processed" -Level "WARN"
+            return $false
+        }
+        
+        try {
+            # Verify repository is not already being monitored
+            if ($script:MonitoredRepositories.ContainsKey($RepoPath)) {
+                Write-Log -Message "Repository $repoName is already being monitored" -Level "WARN"
+                return $false
+            }
+            
+            # Add to monitored repositories
+            $script:MonitoredRepositories[$RepoPath] = @{
+                LastSync = $null
+                Status = "Pending"
+                Branch = ""
+                CurrentOperation = $null
+            }
+            
+            Write-Log -Message "Repository $repoName added to sync list" -Level "INFO"
+            $script:LastRepoOperation[$repoName] = $now
+            return $true
+        }
+        finally {
+            # Release lock
+            $null = $script:RepoOperationLock.TryRemove($repoName, [ref]$true)
+        }
+    }
+    catch {
+        Write-Log -Message "Error adding repository $repoName`: $_" -Level "ERROR"
+        return $false
+    }
+}
+
+function Remove-RepositoryFromSync {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$RepoPath
+    )
+    
+    try {
+        $repoName = Split-Path $RepoPath -Leaf
+        
+        # Check if we're operating too quickly on this repo
+        $lastOp = $script:LastRepoOperation[$repoName]
+        $now = Get-Date
+        if ($lastOp -and ($now - $lastOp).TotalMilliseconds -lt $script:MinOperationInterval) {
+            Write-Log -Message "Operation on repository $repoName throttled - please wait" -Level "WARN"
+            return $false
+        }
+        
+        # Try to acquire lock for this repo
+        if (-not $script:RepoOperationLock.TryAdd($repoName, $true)) {
+            Write-Log -Message "Repository $repoName is currently being processed" -Level "WARN"
+            return $false
+        }
+        
+        try {
+            # Clean up any running jobs for this repo
+            Get-Job | Where-Object { 
+                $_.Name -like "GitLoop_$repoName*" 
+            } | Stop-Job -PassThru | Remove-Job
+            
+            # Remove from monitored repositories
+            $script:MonitoredRepositories.Remove($RepoPath)
+            
+            Write-Log -Message "Repository $repoName removed from sync list" -Level "INFO"
+            $script:LastRepoOperation[$repoName] = $now
+            return $true
+        }
+        finally {
+            # Release lock
+            $null = $script:RepoOperationLock.TryRemove($repoName, [ref]$true)
+        }
+    }
+    catch {
+        Write-Log -Message "Error removing repository $repoName`: $_" -Level "ERROR"
+        return $false
+    }
+}
+
+# Update the form cleanup to include new resources
+$form.Add_FormClosing({
+    param($sender, $e)
+    Write-Host "Cleaning up resources..."
+    
+    # Stop monitoring
+    Stop-MonitoringRepositories
+    
+    # Stop all timers
+    if ($script:CountdownTimer) {
+        $script:CountdownTimer.Stop()
+        $script:CountdownTimer.Dispose()
+    }
+    if ($script:JobMonitorTimer) {
+        $script:JobMonitorTimer.Stop()
+        $script:JobMonitorTimer.Dispose()
+    }
+    
+    # Clean up any running jobs
+    Get-Job | Where-Object { $_.Name -like "GitLoop*" } | Stop-Job -PassThru | Remove-Job
+    
+    # Kill any remaining git processes started by this script
+    Get-Process | Where-Object { $_.Name -eq "git" -and $_.StartTime -gt $script:StartTime } | Stop-Process -Force
+    
+    # Clear operation tracking
+    $script:LastRepoOperation.Clear()
+    $script:RepoOperationLock.Clear()
+    
+    Write-Host "Cleanup complete"
+    Write-Log -Message "Application exiting - cleanup complete" -Level "INFO"
+})

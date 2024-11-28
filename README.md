@@ -252,6 +252,12 @@ The `.gitignore` is configured to maintain a clean repository while developing:
 ## 🔄 Version History
 
 - **v1.1.1** (Current)
+  - **Repository Management**
+    * Added operation throttling (500ms minimum interval)
+    * Implemented repository-specific locks
+    * Improved rapid change handling
+    * Better cleanup of repository resources
+
   - **Process Management**
     * Improved application cleanup on exit
     * Proper termination of background jobs
