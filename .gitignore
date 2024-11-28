@@ -4,6 +4,8 @@
 
 # Git directories
 /.git/
+/.git/hooks/
+hooks/
 
 # Development and planning files
 /dev/
