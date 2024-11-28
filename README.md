@@ -292,7 +292,26 @@ The `.gitignore` is configured to maintain a clean repository while developing:
 
 ## 🔄 Version History
 
-- **v1.2.0** (Current)
+- **v1.2.1** (Current)
+  - **Enhanced Privacy & Security**
+    * Automatic log cleanup on startup
+    * Session-specific logging
+    * Preserved config backups
+    * No sensitive data persistence
+
+  - **Improved Logging System**
+    * More robust log file handling
+    * Better error handling for log writes
+    * Clear startup messages
+    * Proper file initialization checks
+
+  - **Script Improvements**
+    * Better variable initialization
+    * More robust error handling
+    * Cleaner startup sequence
+    * Improved resource management
+
+- **v1.2.0**
   - **Smart Resource Management**
     * Automatic CPU and Memory monitoring
     * Dynamic operation throttling based on system load
@@ -305,12 +324,6 @@ The `.gitignore` is configured to maintain a clean repository while developing:
     * Network connectivity checks
     * Improved operation scheduling
     * Auto-stashing for conflicted changes
-
-  - **Configuration System**
-    * Auto-updating configuration system
-    * Backward compatibility maintenance
-    * Dynamic feature toggles
-    * Comprehensive logging options
 
 - **v1.1.1**
   - **Repository Management**
@@ -493,6 +506,28 @@ For issues and feature requests, please use the GitHub issues tracker.
   * Network connectivity checks
   * Improved operation scheduling
   * Auto-stashing for conflicted changes
+
+## 🔒 Privacy & Security
+
+Git Loop takes your privacy seriously:
+
+1. **Log Management**
+   - Logs are automatically cleared on startup
+   - Only current session data is stored
+   - No historical data persists between sessions
+   - Clean startup for each run
+
+2. **Configuration Security**
+   - Main config file is git-ignored
+   - Config backups are session-specific
+   - Example config contains no sensitive data
+   - Secure handling of repository credentials
+
+3. **Data Handling**
+   - No persistent storage of sensitive data
+   - Session-only operation tracking
+   - Clean shutdown and cleanup
+   - Safe error logging (no credentials)
 
 ## Feature Benefits
 
