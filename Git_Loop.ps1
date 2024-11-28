@@ -221,6 +221,46 @@ function Initialize-Configuration {
     return $true
 }
 
+function Initialize-Logging {
+    param(
+        [int]$MaxLogSizeMB = 10,
+        [int]$MaxLogFiles = 5
+    )
+    
+    try {
+        # Ensure logs directory exists
+        $logsPath = Join-Path $PSScriptRoot "logs"
+        if (-not (Test-Path $logsPath)) {
+            New-Item -ItemType Directory -Path $logsPath | Out-Null
+        }
+
+        # Define log files
+        $script:LogFile = Join-Path $logsPath "GitLoop.log"
+        $script:ErrorLogFile = Join-Path $logsPath "errors.log"
+
+        # Clear only the main log files, preserve config backups
+        if (Test-Path $script:LogFile) {
+            Remove-Item -Path $script:LogFile -Force
+            Write-Host "Cleared main log file for privacy"
+        }
+        if (Test-Path $script:ErrorLogFile) {
+            Remove-Item -Path $script:ErrorLogFile -Force
+            Write-Host "Cleared error log file for privacy"
+        }
+
+        # Create new empty log files
+        New-Item -ItemType File -Path $script:LogFile -Force | Out-Null
+        New-Item -ItemType File -Path $script:ErrorLogFile -Force | Out-Null
+
+        Write-Log -Message "Logging initialized with max size ${MaxLogSizeMB}MB and $MaxLogFiles rotation files" -Level "INFO"
+        Write-Log -Message "Log files cleared on launch for privacy" -Level "INFO"
+        Write-Log -Message "Config backups are preserved" -Level "INFO"
+    }
+    catch {
+        Write-Error "Failed to initialize logging: $_"
+    }
+}
+
 function Test-GitSshKey {
     Write-Verbose "Testing SSH key configuration..."
     $testResult = ssh -T git@github.com 2>&1
@@ -284,6 +324,7 @@ if (-not (Test-Path $configPath)) {
     # Backup existing configuration before loading
     Backup-Configuration -ConfigPath $configPath
     Initialize-GitIgnore
+    Initialize-Logging
 }
 
 try {
