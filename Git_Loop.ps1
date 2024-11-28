@@ -37,12 +37,18 @@ function Write-Log {
         default { Write-Host $logMessage }
     }
     
-    # Only write to log files if they're initialized
-    if ($script:LogFile -and $script:ErrorLogFile) {
-        if ($Level -eq 'ERROR') {
-            Add-Content -Path $script:ErrorLogFile -Value $logMessage
+    # Only write to log files if they're initialized and not null
+    if ($script:LogFile -and (Test-Path $script:LogFile) -and 
+        $script:ErrorLogFile -and (Test-Path $script:ErrorLogFile)) {
+        try {
+            if ($Level -eq 'ERROR') {
+                Add-Content -Path $script:ErrorLogFile -Value $logMessage
+            }
+            Add-Content -Path $script:LogFile -Value $logMessage
         }
-        Add-Content -Path $script:LogFile -Value $logMessage
+        catch {
+            Write-Warning "Failed to write to log file: $_"
+        }
     }
 }
 
@@ -1497,7 +1503,7 @@ function Initialize-Configuration {
                 $updated = Update-ConfigurationFromExample $config $example
                 if ($updated) {
                     $config | ConvertTo-Json -Depth 10 | Set-Content $configPath
-                    Write-Log -Message "Updated config file with new settings" -Level "INFO"
+                    Write-Host "Configuration has been updated with new settings." -ForegroundColor Green
                 }
             }
             
