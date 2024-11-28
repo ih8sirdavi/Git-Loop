@@ -561,14 +561,8 @@ function Log-Message {
     }
     $logMessage += " $message"
     
-    # Write to log file first
-    try {
-        $logFile = Join-Path $logsDir $config.LogFile
-        Add-Content -Path $logFile -Value $logMessage
-    }
-    catch {
-        Write-Warning "Failed to write to log file: $_"
-    }
+    # Add to buffer instead of writing to file
+    [void]$script:logBuffer.Add($logMessage)
     
     # Update UI if possible
     Update-UI {
@@ -601,8 +595,8 @@ function Log-Error {
         $errorMessage += "`nStack Trace: $($errorRecord.ScriptStackTrace)"
     }
     
-    # Write to error log file
-    Add-Content -Path $errorLogPath -Value $errorMessage
+    # Add to buffer instead of writing to file
+    [void]$script:logBuffer.Add($errorMessage)
     
     # Also log to main log
     Log-Message $message -repository $repository -type "ERROR"
@@ -1218,6 +1212,9 @@ $startButton.Add_Click({
         return
     }
     
+    # Clear the buffer when starting monitoring
+    $script:logBuffer.Clear()
+    
     $timer.Start()
     $countdownTimer.Start()
     $jobMonitorTimer.Start()
@@ -1265,11 +1262,12 @@ $stopButton.Add_Click({
     $script:nextSyncTime = $null
     Log-Message "Stopped monitoring repositories"
     
-    # Clear the log file when stopping monitoring
-    if (Test-Path $config.LogFile) {
-        Start-Sleep -Seconds 1  # Give time for final logs to be written
-        Clear-Content $config.LogFile
-    }
+    # Write buffered logs to file
+    Set-Content -Path $config.LogFile -Value "# Git Loop Log File`n# Session ended: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+    Add-Content -Path $config.LogFile -Value $script:logBuffer
+    
+    # Clear the buffer
+    $script:logBuffer.Clear()
 })
 
 # Clear button click handler
@@ -1397,6 +1395,9 @@ if ($PSBoundParameters['Test']) {
 if (-not (Test-Dependencies)) {
     exit 1
 }
+
+# Initialize log buffer
+$script:logBuffer = New-Object System.Collections.ArrayList
 
 # Show form
 $form.ShowDialog()
