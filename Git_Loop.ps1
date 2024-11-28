@@ -1400,6 +1400,52 @@ $script:LastRepoOperation = @{}
 $script:RepoOperationLock = [System.Collections.Concurrent.ConcurrentDictionary[string, bool]]::new()
 $script:MinOperationInterval = 500 # Milliseconds
 
+function Test-ValidGitRepository {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Path
+    )
+    
+    try {
+        # Check if path is null or empty
+        if ([string]::IsNullOrWhiteSpace($Path)) {
+            Write-Log -Message "Invalid repository path: Path is null or empty" -Level "ERROR"
+            return $false
+        }
+
+        # Check if path exists
+        if (-not (Test-Path -Path $Path)) {
+            Write-Log -Message "Invalid repository path: $Path does not exist" -Level "ERROR"
+            return $false
+        }
+
+        # Check if it's a directory
+        if (-not (Test-Path -Path $Path -PathType Container)) {
+            Write-Log -Message "Invalid repository path: $Path is not a directory" -Level "ERROR"
+            return $false
+        }
+
+        # Check if it's a git repository
+        Push-Location $Path
+        try {
+            $gitTest = git rev-parse --git-dir 2>&1
+            if ($LASTEXITCODE -ne 0) {
+                Write-Log -Message "Invalid repository path: $Path is not a git repository" -Level "ERROR"
+                return $false
+            }
+        }
+        finally {
+            Pop-Location
+        }
+
+        return $true
+    }
+    catch {
+        Write-Log -Message "Error validating repository path $Path`: $_" -Level "ERROR"
+        return $false
+    }
+}
+
 function Add-RepositoryToSync {
     param(
         [Parameter(Mandatory = $true)]
@@ -1407,6 +1453,11 @@ function Add-RepositoryToSync {
     )
     
     try {
+        # Validate repository path first
+        if (-not (Test-ValidGitRepository -Path $RepoPath)) {
+            return $false
+        }
+
         $repoName = Split-Path $RepoPath -Leaf
         
         # Check if we're operating too quickly on this repo
@@ -1531,3 +1582,54 @@ $form.Add_FormClosing({
     Write-Host "Cleanup complete"
     Write-Log -Message "Application exiting - cleanup complete" -Level "INFO"
 })
+
+function Initialize-Logging {
+    param(
+        [int]$MaxLogSizeMB = 10,
+        [int]$MaxLogFiles = 5
+    )
+    
+    try {
+        # Ensure logs directory exists
+        $logsPath = Join-Path $PSScriptRoot "logs"
+        if (-not (Test-Path $logsPath)) {
+            New-Item -ItemType Directory -Path $logsPath | Out-Null
+        }
+
+        # Define log files
+        $script:LogFile = Join-Path $logsPath "GitLoop.log"
+        $script:ErrorLogFile = Join-Path $logsPath "errors.log"
+
+        # Rotate logs if they exceed size limit
+        $logFiles = @($script:LogFile, $script:ErrorLogFile)
+        foreach ($file in $logFiles) {
+            if (Test-Path $file) {
+                $logSize = (Get-Item $file).Length / 1MB
+                if ($logSize -gt $MaxLogSizeMB) {
+                    # Rotate existing backup logs
+                    for ($i = $MaxLogFiles - 1; $i -gt 0; $i--) {
+                        $oldFile = "$file.$i"
+                        $newFile = "$file.$($i + 1)"
+                        if (Test-Path $oldFile) {
+                            Move-Item -Path $oldFile -Destination $newFile -Force -ErrorAction SilentlyContinue
+                        }
+                    }
+                    # Move current log to .1
+                    Move-Item -Path $file -Destination "$file.1" -Force
+                    # Create new empty log file
+                    New-Item -ItemType File -Path $file -Force | Out-Null
+                }
+            }
+        }
+
+        # Clean up old log files
+        Get-ChildItem -Path $logsPath -Filter "*.log.*" | Where-Object {
+            $_.Name -match "\.(\d+)$" -and [int]$matches[1] -gt $MaxLogFiles
+        } | Remove-Item -Force
+
+        Write-Log -Message "Logging initialized with max size ${MaxLogSizeMB}MB and $MaxLogFiles rotation files" -Level "INFO"
+    }
+    catch {
+        Write-Error "Failed to initialize logging: $_"
+    }
+}
