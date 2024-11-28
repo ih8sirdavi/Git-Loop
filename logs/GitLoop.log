@@ -3,3 +3,7 @@
 [2024-11-27 20:59:38][INFO][Git Loop]  Repository Git Loop added to sync list
 [2024-11-27 20:59:39][INFO] Started monitoring selected repositories
 [2024-11-27 20:59:39][INFO] Started async operation: Git Loop
+[2024-11-27 20:59:46][INFO][Masterlogs]  Repository Masterlogs added to sync list
+[2024-11-27 20:59:47][INFO][ANF]  Repository ANF added to sync list
+[2024-11-27 20:59:47][INFO][ANF]  Repository ANF removed from sync list
+[2024-11-27 21:00:10][INFO] Started async operation: Git Loop

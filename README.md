@@ -147,6 +147,15 @@ Testing enhanced logging system:
 
 Last test: [Current Timestamp]
 
+## 🧪 Testing Log System
+
+Testing log clearing functionality:
+- Logs clear on start/stop
+- Only active session logs retained
+- Clean git history maintained
+
+Last test: 2024-11-27 21:00
+
 ## ⚙️ Configuration
 
 The application can be configured through the `config` file. Here are the key settings:
