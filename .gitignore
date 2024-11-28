@@ -112,10 +112,12 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
+# Backup files
+logs/config.backup
+
 # Keep these files
 !README.md
 !LICENSE
 !CHANGELOG.md
 !CONTRIBUTING.md
 !logs/.gitkeep
-/config.backup
