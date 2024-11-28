@@ -129,6 +129,13 @@ cd "Git Loop"
     - Restart Git Loop completely
     - Verify all timers use new interval
 
+## 🧪 Testing Notes
+
+- Last sync test: [Current Timestamp]
+- Testing auto-sync functionality
+- Verifying resource monitoring
+- Checking performance metrics
+
 ## ⚙️ Configuration
 
 The application can be configured through the `config` file. Here are the key settings:
