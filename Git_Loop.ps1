@@ -1293,17 +1293,27 @@ $form.Add_FormClosing({
     Write-Host "Cleaning up resources..."
     
     # Stop monitoring
-    Stop-MonitoringRepositories
+    $timer.Stop()
+    $countdownTimer.Stop()
+    $jobMonitorTimer.Stop()
     
-    # Stop all timers
-    if ($script:CountdownTimer) {
-        $script:CountdownTimer.Stop()
-        $script:CountdownTimer.Dispose()
+    # Stop all jobs
+    $script:runningJobs.Keys | ForEach-Object {
+        $job = $script:runningJobs[$_].Job
+        if ($job) {
+            Stop-Job -Job $job -ErrorAction SilentlyContinue
+            Remove-Job -Job $job -ErrorAction SilentlyContinue
+        }
     }
-    if ($script:JobMonitorTimer) {
-        $script:JobMonitorTimer.Stop()
-        $script:JobMonitorTimer.Dispose()
-    }
+    $script:runningJobs.Clear()
+    
+    # Write final logs before closing
+    Log-Message "Application exiting - cleanup complete" -Level "INFO"
+    
+    # Write buffered logs to file
+    $logFile = Join-Path $logsDir $config.LogFile
+    Set-Content -Path $logFile -Value "# Git Loop Log File`n# Session ended: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+    Add-Content -Path $logFile -Value $script:logBuffer
     
     # Clean up any running jobs
     Get-Job | Where-Object { $_.Name -like "GitLoop*" } | Stop-Job -PassThru | Remove-Job
