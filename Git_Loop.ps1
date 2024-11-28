@@ -4,6 +4,9 @@ param(
     [switch]$Test
 )
 
+# Record start time for process tracking
+$script:StartTime = Get-Date
+
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
@@ -1271,23 +1274,36 @@ $clearButton.Add_Click({
 
 # Form closing handler
 $form.Add_FormClosing({
-    if ($timer) {
-        $timer.Stop()
-        $timer.Dispose()
+    param($sender, $e)
+    Write-Host "Cleaning up resources..."
+    
+    # Stop monitoring
+    Stop-MonitoringRepositories
+    
+    # Stop all timers
+    if ($script:CountdownTimer) {
+        $script:CountdownTimer.Stop()
+        $script:CountdownTimer.Dispose()
     }
-    if ($countdownTimer) {
-        $countdownTimer.Stop()
-        $countdownTimer.Dispose()
+    if ($script:JobMonitorTimer) {
+        $script:JobMonitorTimer.Stop()
+        $script:JobMonitorTimer.Dispose()
     }
-    if ($jobMonitorTimer) {
-        $jobMonitorTimer.Stop()
-        $jobMonitorTimer.Dispose()
-    }
-    if ($testTimer) {
-        $testTimer.Stop()
-        $testTimer.Dispose()
-    }
+    
+    # Clean up any running jobs
+    Get-Job | Where-Object { $_.Name -like "GitLoop*" } | Stop-Job -PassThru | Remove-Job
+    
+    # Kill any remaining git processes started by this script
+    Get-Process | Where-Object { $_.Name -eq "git" -and $_.StartTime -gt $script:StartTime } | Stop-Process -Force
+    
+    Write-Host "Cleanup complete"
+    
+    # Log application exit
+    Write-Log -Message "Application exiting - cleanup complete" -Level "INFO"
 })
+
+# Add this at the start of the script
+$script:StartTime = Get-Date
 
 # Check dependencies before starting
 function Test-Dependencies {
