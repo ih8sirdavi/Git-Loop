@@ -10,48 +10,6 @@ $script:StartTime = Get-Date
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
-# Script-level variables
-$script:LogFile = $null
-$script:ErrorLogFile = $null
-$script:runningJobs = @{}
-$script:LastRepoOperation = @{}
-$script:MonitoredRepositories = @{}
-$script:RepoOperationLock = [System.Collections.Concurrent.ConcurrentDictionary[string, bool]]::new()
-$script:MinOperationInterval = 500 # Milliseconds
-
-function Write-Log {
-    param(
-        [string]$Message,
-        [ValidateSet('INFO', 'WARN', 'ERROR', 'DEBUG')]
-        [string]$Level = 'INFO'
-    )
-    
-    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    $logMessage = "[$timestamp] $Message"
-    
-    # Write to console with color based on level
-    switch ($Level) {
-        'ERROR' { Write-Host $logMessage -ForegroundColor Red }
-        'WARN'  { Write-Host $logMessage -ForegroundColor Yellow }
-        'DEBUG' { Write-Host $logMessage -ForegroundColor Gray }
-        default { Write-Host $logMessage }
-    }
-    
-    # Only write to log files if they're initialized and not null
-    if ($script:LogFile -and (Test-Path $script:LogFile) -and 
-        $script:ErrorLogFile -and (Test-Path $script:ErrorLogFile)) {
-        try {
-            if ($Level -eq 'ERROR') {
-                Add-Content -Path $script:ErrorLogFile -Value $logMessage
-            }
-            Add-Content -Path $script:LogFile -Value $logMessage
-        }
-        catch {
-            Write-Warning "Failed to write to log file: $_"
-        }
-    }
-}
-
 # Configuration paths
 $configPath = Join-Path $PSScriptRoot "config"
 $configExamplePath = Join-Path $PSScriptRoot "config.example"
@@ -263,46 +221,6 @@ function Initialize-Configuration {
     return $true
 }
 
-function Initialize-Logging {
-    param(
-        [int]$MaxLogSizeMB = 10,
-        [int]$MaxLogFiles = 5
-    )
-    
-    try {
-        # Ensure logs directory exists
-        $logsPath = Join-Path $PSScriptRoot "logs"
-        if (-not (Test-Path $logsPath)) {
-            New-Item -ItemType Directory -Path $logsPath | Out-Null
-        }
-
-        # Define log files
-        $script:LogFile = Join-Path $logsPath "GitLoop.log"
-        $script:ErrorLogFile = Join-Path $logsPath "errors.log"
-
-        # Clear only the main log files, preserve config backups
-        if (Test-Path $script:LogFile) {
-            Remove-Item -Path $script:LogFile -Force
-            Write-Host "Cleared main log file for privacy"
-        }
-        if (Test-Path $script:ErrorLogFile) {
-            Remove-Item -Path $script:ErrorLogFile -Force
-            Write-Host "Cleared error log file for privacy"
-        }
-
-        # Create new empty log files
-        New-Item -ItemType File -Path $script:LogFile -Force | Out-Null
-        New-Item -ItemType File -Path $script:ErrorLogFile -Force | Out-Null
-
-        Write-Log -Message "Logging initialized with max size ${MaxLogSizeMB}MB and $MaxLogFiles rotation files" -Level "INFO"
-        Write-Log -Message "Log files cleared on launch for privacy" -Level "INFO"
-        Write-Log -Message "Config backups are preserved" -Level "INFO"
-    }
-    catch {
-        Write-Error "Failed to initialize logging: $_"
-    }
-}
-
 function Test-GitSshKey {
     Write-Verbose "Testing SSH key configuration..."
     $testResult = ssh -T git@github.com 2>&1
@@ -366,7 +284,6 @@ if (-not (Test-Path $configPath)) {
     # Backup existing configuration before loading
     Backup-Configuration -ConfigPath $configPath
     Initialize-GitIgnore
-    Initialize-Logging
 }
 
 try {
@@ -1503,7 +1420,7 @@ function Initialize-Configuration {
                 $updated = Update-ConfigurationFromExample $config $example
                 if ($updated) {
                     $config | ConvertTo-Json -Depth 10 | Set-Content $configPath
-                    Write-Host "Configuration has been updated with new settings." -ForegroundColor Green
+                    Write-Log -Message "Updated config file with new settings" -Level "INFO"
                 }
             }
             

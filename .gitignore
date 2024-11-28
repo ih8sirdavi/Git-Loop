@@ -1,4 +1,5 @@
 # Git Loop Core
+/logs/
 /config
 !/config.example
 
@@ -8,6 +9,33 @@
 # Development and planning files
 /dev/
 /docs/planning/
+*.dev.*
+*.test.*
+*.local.*
+*_wip.*
+*_draft.*
+TODO.md
+NOTES.md
+*.todo
+*.notes
+
+# PowerShell development
+*.ps1.bak
+*.ps1.tmp
+*.psm1.bak
+*.psd1.bak
+*.ps1.old
+*.psm1.old
+*.psd1.old
+
+# IDE and editor files
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+.vs/
 
 # Temporary files
 [Tt]emp/
@@ -24,8 +52,9 @@ ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
 
-# Log files
-/logs/
+# Log files (but keep the logs directory structure)
+*.log
+!logs/.gitkeep
 
 # Test files
 /tests/
