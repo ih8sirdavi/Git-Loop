@@ -1399,19 +1399,33 @@ function Test-Dependencies {
     return $true
 }
 
-# Add test timeout timer if -Test parameter is provided
-$testTimer = $null
-if ($PSBoundParameters['Test']) {
-    Write-Verbose "Running in test mode with 30-second timeout"
-    $testTimer = New-Object System.Windows.Forms.Timer
-    $testTimer.Interval = 30000  # 30 seconds
-    $testTimer.Add_Tick({
-        Write-Verbose "Test timeout reached, closing application"
-        $form.Close()
-        $testTimer.Stop()
-        $testTimer.Dispose()
-    })
-    $testTimer.Start()
+# Add test mode error simulation
+function Test-ErrorScenarios {
+    Write-Host "Running in test mode - simulating errors..."
+    
+    # Test 1: Non-existent repository
+    Log-Error "Failed to access repository at 'C:\NonExistentRepo'" -repository "TestRepo1" `
+        -errorRecord (New-Object System.Management.Automation.ErrorRecord `
+            (New-Object System.IO.DirectoryNotFoundException "Directory not found"), `
+            "DirectoryNotFound", "InvalidOperation", "C:\NonExistentRepo")
+    
+    # Test 2: Git command failure
+    Log-Error "Git pull failed: authentication required" -repository "TestRepo2" `
+        -errorRecord (New-Object System.Management.Automation.ErrorRecord `
+            (New-Object System.Exception "fatal: Authentication failed for 'https://github.com/test/repo.git'"), `
+            "GitCommandFailed", "InvalidOperation", "git pull")
+    
+    # Test 3: Invalid remote
+    Log-Error "Failed to sync: remote origin not found" -repository "TestRepo3" `
+        -errorRecord (New-Object System.Management.Automation.ErrorRecord `
+            (New-Object System.Exception "fatal: 'origin' does not appear to be a git repository"), `
+            "InvalidRemote", "InvalidOperation", "git remote")
+}
+
+# Add test mode check at startup
+if ($Test) {
+    Write-Host "Test mode enabled"
+    Test-ErrorScenarios
 }
 
 # Add dependency check before showing form
