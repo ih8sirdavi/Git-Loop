@@ -149,14 +149,15 @@ Last test: [Current Timestamp]
 
 ## 🧪 Testing Log System
 
-Testing buffered logging system (v2):
+Testing buffered logging system (v3):
 - Logs stored in memory during monitoring
-- Written to file only when monitoring stops
+- Written to file on application close
 - Clean git history maintained
 - UI updates in real-time
 - Improved buffer initialization
+- Fixed form closing handler
 
-Last test: 2024-11-27 21:20
+Last test: 2024-11-27 21:25
 
 ## ⚙️ Configuration
 
