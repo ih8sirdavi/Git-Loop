@@ -149,12 +149,13 @@ Last test: [Current Timestamp]
 
 ## 🧪 Testing Log System
 
-Testing log clearing functionality:
-- Logs clear on start/stop
-- Only active session logs retained
+Testing buffered logging system:
+- Logs stored in memory during monitoring
+- Written to file only when monitoring stops
 - Clean git history maintained
+- UI updates in real-time
 
-Last test: 2024-11-27 21:00
+Last test: 2024-11-27 21:15
 
 ## ⚙️ Configuration
 
