@@ -10,6 +10,37 @@ $script:StartTime = Get-Date
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
+# Script-level variables for logging
+$script:LogFile = $null
+$script:ErrorLogFile = $null
+
+function Write-Log {
+    param(
+        [string]$Message,
+        [ValidateSet('INFO', 'WARN', 'ERROR', 'DEBUG')]
+        [string]$Level = 'INFO'
+    )
+    
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $logMessage = "[$timestamp] $Message"
+    
+    # Write to console with color based on level
+    switch ($Level) {
+        'ERROR' { Write-Host $logMessage -ForegroundColor Red }
+        'WARN'  { Write-Host $logMessage -ForegroundColor Yellow }
+        'DEBUG' { Write-Host $logMessage -ForegroundColor Gray }
+        default { Write-Host $logMessage }
+    }
+    
+    # Only write to log files if they're initialized
+    if ($script:LogFile -and $script:ErrorLogFile) {
+        if ($Level -eq 'ERROR') {
+            Add-Content -Path $script:ErrorLogFile -Value $logMessage
+        }
+        Add-Content -Path $script:LogFile -Value $logMessage
+    }
+}
+
 # Configuration paths
 $configPath = Join-Path $PSScriptRoot "config"
 $configExamplePath = Join-Path $PSScriptRoot "config.example"
