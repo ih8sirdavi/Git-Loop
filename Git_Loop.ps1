@@ -9,9 +9,7 @@ $script:logBuffer = New-Object System.Collections.ArrayList
 $script:errorBuffer = New-Object System.Collections.ArrayList
 $script:StartTime = Get-Date
 
-# Record start time for process tracking
-$script:StartTime = Get-Date
-
+# Load required assemblies
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
@@ -356,15 +354,21 @@ if (-not (Test-Path $logsDir)) {
     New-Item -ItemType Directory -Path $logsDir | Out-Null
 }
 
-# Clear log file at startup
+# Initialize and clear log files at startup
 $logFile = Join-Path $logsDir "GitLoop.log"
+$errorLogPath = Join-Path $logsDir "errors.log"
+
+# Clear and initialize main log file
 if (Test-Path $logFile) {
     Clear-Content $logFile
 }
 Set-Content -Path $logFile -Value "# Git Loop Log File`n# New session started: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
 
-# Initialize error logging
-$errorLogPath = Join-Path $logsDir "errors.log"
+# Clear error log file if it exists
+if (Test-Path $errorLogPath) {
+    Clear-Content $errorLogPath
+    Set-Content -Path $errorLogPath -Value "# Git Loop Error Log`n# New session started: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+}
 
 # Function to update existing config with new settings
 function Update-ConfigurationWithDefaults {
