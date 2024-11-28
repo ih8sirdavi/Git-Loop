@@ -354,20 +354,16 @@ if (-not (Test-Path $logsDir)) {
     New-Item -ItemType Directory -Path $logsDir | Out-Null
 }
 
-# Initialize and clear log files at startup
+# Initialize log files
 $logFile = Join-Path $logsDir $config.LogFile
 $errorLogPath = Join-Path $logsDir "errors.log"
 
-# Clear and initialize main log file
+# Clear log files at startup
 if (Test-Path $logFile) {
     Clear-Content $logFile
 }
-Set-Content -Path $logFile -Value "# Git Loop Log File`n# This file contains logs for the current active session only"
-
-# Clear error log file if it exists
 if (Test-Path $errorLogPath) {
     Clear-Content $errorLogPath
-    Set-Content -Path $errorLogPath -Value "# Git Loop Error Log`n# This file contains errors for the current active session only"
 }
 
 # Function to update existing config with new settings
@@ -553,11 +549,12 @@ function Log-Message {
     param(
         [string]$message,
         [string]$repository = "",
-        [string]$type = "INFO"
+        [string]$type = "INFO",
+        [string]$Level = "INFO"
     )
     
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    $logMessage = "[$timestamp][$type]"
+    $logMessage = "[$timestamp][$Level]"
     if ($repository) {
         $logMessage += "[$repository] "
     }
@@ -566,15 +563,11 @@ function Log-Message {
     # Add to buffer instead of writing to file
     [void]$script:logBuffer.Add($logMessage)
     
-    # Update UI if possible
-    Update-UI {
-        $statusBox.AppendText("$logMessage`r`n")
-        $statusBox.ScrollToCaret()
-        $statusLabel.Text = $message
+    # Update UI log
+    if ($logTextBox) {
+        $logTextBox.AppendText("$logMessage`n")
+        $logTextBox.ScrollToCaret()
     }
-    
-    # Always write to verbose stream
-    Write-Verbose $logMessage
 }
 
 # Enhanced logging function with error handling
@@ -1323,27 +1316,13 @@ $form.Add_FormClosing({
     Log-Message "Application exiting - cleanup complete" -Level "INFO"
     
     # Write buffered logs to file
-    $logFile = Join-Path $logsDir $config.LogFile
-    if (Test-Path $logFile) {
-        $logContent = Get-Content $logFile
-        $logContent += $script:logBuffer
-        Set-Content -Path $logFile -Value $logContent
-    } else {
-        Set-Content -Path $logFile -Value "# Git Loop Log File`n# This file contains logs for the current active session only"
-        Add-Content -Path $logFile -Value $script:logBuffer
-    }
+    Set-Content -Path $logFile -Value "# Git Loop Log File`n# This file contains logs for the current active session only"
+    Add-Content -Path $logFile -Value $script:logBuffer
     
     # Write error logs if any
     if ($script:errorBuffer.Count -gt 0) {
-        $errorLogPath = Join-Path $logsDir "errors.log"
-        if (Test-Path $errorLogPath) {
-            $errorLogContent = Get-Content $errorLogPath
-            $errorLogContent += $script:errorBuffer
-            Set-Content -Path $errorLogPath -Value $errorLogContent
-        } else {
-            Set-Content -Path $errorLogPath -Value "# Git Loop Error Log`n# This file contains errors for the current active session only"
-            Add-Content -Path $errorLogPath -Value $script:errorBuffer
-        }
+        Set-Content -Path $errorLogPath -Value "# Git Loop Error Log`n# This file contains errors for the current active session only"
+        Add-Content -Path $errorLogPath -Value $script:errorBuffer
     }
     
     # Clean up any running jobs
@@ -1356,6 +1335,25 @@ $form.Add_FormClosing({
     
     # Log application exit
     Write-Log -Message "Application exiting - cleanup complete" -Level "INFO"
+})
+
+# Stop monitoring button click handler
+$stopButton.Add_Click({
+    Stop-MonitoringRepositories
+    
+    # Write buffered logs to file
+    Set-Content -Path $logFile -Value "# Git Loop Log File`n# This file contains logs for the current active session only"
+    Add-Content -Path $logFile -Value $script:logBuffer
+    
+    # Write error logs if any
+    if ($script:errorBuffer.Count -gt 0) {
+        Set-Content -Path $errorLogPath -Value "# Git Loop Error Log`n# This file contains errors for the current active session only"
+        Add-Content -Path $errorLogPath -Value $script:errorBuffer
+    }
+    
+    # Clear the buffers after writing
+    $script:logBuffer.Clear()
+    $script:errorBuffer.Clear()
 })
 
 # Add this at the start of the script

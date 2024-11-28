@@ -1,9 +1,0 @@
-# Git Loop Log File
-# This file contains logs for the current active session only
-[2024-11-27 22:14:35][INFO] Started monitoring selected repositories
-[2024-11-27 22:14:36][INFO] Started async operation: Git Loop
-[2024-11-27 22:14:44][INFO] Stopped monitoring repositories
-[2024-11-27 22:14:53][INFO] Started monitoring selected repositories
-[2024-11-27 22:14:53][INFO] Started async operation: Git Loop
-[2024-11-27 22:15:03][INFO] Started async operation: Git Loop
-[2024-11-27 22:15:08][INFO] Stopped monitoring repositories
