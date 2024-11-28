@@ -40,7 +40,7 @@
         "OperationTiming": true,
         "ResourceUsage": true,
         "DetailLevel": "Verbose",
-        "LogFile": "logs/GitLoop.log"
+        "LogFile": "GitLoop.log"
     },
     "UI": {
         "Theme": "Light",
