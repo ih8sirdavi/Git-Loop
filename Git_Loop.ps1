@@ -355,7 +355,7 @@ if (-not (Test-Path $logsDir)) {
 }
 
 # Initialize and clear log files at startup
-$logFile = Join-Path $logsDir "GitLoop.log"
+$logFile = Join-Path $logsDir $config.LogFile
 $errorLogPath = Join-Path $logsDir "errors.log"
 
 # Clear and initialize main log file

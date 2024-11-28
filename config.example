@@ -39,31 +39,33 @@
         "PerformanceMetrics": true,
         "OperationTiming": true,
         "ResourceUsage": true,
-        "DetailLevel": "Verbose"
+        "DetailLevel": "Verbose",
+        "LogFile": "logs/GitLoop.log"
     },
     "UI": {
+        "Theme": "Light",
         "Themes": {
             "Light": {
-                "Background": "#F8F8F8",
-                "TextPrimary": "#3C3C3C",
-                "TextSecondary": "#787878",
-                "ButtonBackground": "#F0F0F0",
-                "ButtonHover": "#E6E6E6",
-                "ButtonBorder": "#C8C8C8",
-                "Success": "#28A745",
-                "Error": "#DC3545",
-                "Warning": "#FFC107"
+                "Background": "#FFFFFF",
+                "TextPrimary": "#2C2C2C",
+                "TextSecondary": "#5C5C5C",
+                "ButtonBackground": "#EAEAEA",
+                "ButtonHover": "#D5D5D5",
+                "ButtonBorder": "#BFBFBF",
+                "Success": "#34C759",
+                "Error": "#FF3B30",
+                "Warning": "#FF9500"
             },
             "Dark": {
-                "Background": "#1E1E1E",
-                "TextPrimary": "#F0F0F0",
-                "TextSecondary": "#B4B4B4",
-                "ButtonBackground": "#2D2D2D",
-                "ButtonHover": "#3C3C3C",
-                "ButtonBorder": "#464646",
-                "Success": "#28A745",
-                "Error": "#DC3545",
-                "Warning": "#FFC107"
+                "Background": "#121212",
+                "TextPrimary": "#E0E0E0",
+                "TextSecondary": "#A8A8A8",
+                "ButtonBackground": "#1F1F1F",
+                "ButtonHover": "#292929",
+                "ButtonBorder": "#3A3A3A",
+                "Success": "#4CAF50",
+                "Error": "#F44336",
+                "Warning": "#FFB74D"
             }
         },
         "ShowProgress": true,
