@@ -252,6 +252,12 @@ The `.gitignore` is configured to maintain a clean repository while developing:
 ## 🔄 Version History
 
 - **v1.1.1** (Current)
+  - **Process Management**
+    * Improved application cleanup on exit
+    * Proper termination of background jobs
+    * Better handling of Git processes
+    * Enhanced resource management
+
   - **Git Operation Handling**
     * Improved Git operation output filtering
     * Properly handle CRLF/LF warnings
