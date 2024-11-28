@@ -6,6 +6,7 @@ param(
 
 # Initialize script-wide variables
 $script:logBuffer = New-Object System.Collections.ArrayList
+$script:errorBuffer = New-Object System.Collections.ArrayList
 $script:StartTime = Get-Date
 
 # Record start time for process tracking
@@ -364,19 +365,6 @@ Set-Content -Path $logFile -Value "# Git Loop Log File`n# New session started: $
 
 # Initialize error logging
 $errorLogPath = Join-Path $logsDir "errors.log"
-$repoStatusImages = @{
-    "Syncing" = [System.Drawing.SystemIcons]::Information
-    "Error" = [System.Drawing.SystemIcons]::Error
-    "Success" = [System.Drawing.SystemIcons]::Shield
-    "Pending" = [System.Drawing.SystemIcons]::Warning
-}
-
-# Create image list for repository status
-$imageList = New-Object System.Windows.Forms.ImageList
-$imageList.ColorDepth = [System.Windows.Forms.ColorDepth]::Depth32Bit
-foreach ($status in $repoStatusImages.Keys) {
-    $imageList.Images.Add($status, $repoStatusImages[$status])
-}
 
 # Function to update existing config with new settings
 function Update-ConfigurationWithDefaults {
@@ -510,7 +498,6 @@ $repoListView.GridLines = $false
 $repoListView.HeaderStyle = [System.Windows.Forms.ColumnHeaderStyle]::None
 $repoListView.Dock = [System.Windows.Forms.DockStyle]::Fill
 $repoListView.Font = New-Object System.Drawing.Font("Segoe UI", 9)
-$repoListView.SmallImageList = $imageList
 $repoGroupBox.Controls.Add($repoListView)
 
 # Add columns
@@ -606,10 +593,10 @@ function Log-Error {
         $errorMessage += "`nStack Trace: $($errorRecord.ScriptStackTrace)"
     }
     
-    # Add to buffer instead of writing to file
-    [void]$script:logBuffer.Add($errorMessage)
+    # Add to error buffer
+    [void]$script:errorBuffer.Add($errorMessage)
     
-    # Also log to main log
+    # Also log to main log buffer
     Log-Message $message -repository $repository -type "ERROR"
     
     # Update repository status in UI
@@ -1277,8 +1264,16 @@ $stopButton.Add_Click({
     Set-Content -Path $config.LogFile -Value "# Git Loop Log File`n# Session ended: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
     Add-Content -Path $config.LogFile -Value $script:logBuffer
     
+    # Write error logs if any
+    if ($script:errorBuffer.Count -gt 0) {
+        $errorLogPath = Join-Path $logsDir "errors.log"
+        Set-Content -Path $errorLogPath -Value "# Git Loop Error Log`n# Session ended: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+        Add-Content -Path $errorLogPath -Value $script:errorBuffer
+    }
+    
     # Clear the buffer
     $script:logBuffer.Clear()
+    $script:errorBuffer.Clear()
 })
 
 # Clear button click handler
@@ -1314,6 +1309,13 @@ $form.Add_FormClosing({
     $logFile = Join-Path $logsDir $config.LogFile
     Set-Content -Path $logFile -Value "# Git Loop Log File`n# Session ended: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
     Add-Content -Path $logFile -Value $script:logBuffer
+    
+    # Write error logs if any
+    if ($script:errorBuffer.Count -gt 0) {
+        $errorLogPath = Join-Path $logsDir "errors.log"
+        Set-Content -Path $errorLogPath -Value "# Git Loop Error Log`n# Session ended: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+        Add-Content -Path $errorLogPath -Value $script:errorBuffer
+    }
     
     # Clean up any running jobs
     Get-Job | Where-Object { $_.Name -like "GitLoop*" } | Stop-Job -PassThru | Remove-Job
