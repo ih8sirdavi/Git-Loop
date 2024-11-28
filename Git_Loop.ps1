@@ -4,6 +4,10 @@ param(
     [switch]$Test
 )
 
+# Initialize script-wide variables
+$script:logBuffer = New-Object System.Collections.ArrayList
+$script:StartTime = Get-Date
+
 # Record start time for process tracking
 $script:StartTime = Get-Date
 
@@ -350,6 +354,13 @@ $logsDir = Join-Path $PSScriptRoot "logs"
 if (-not (Test-Path $logsDir)) {
     New-Item -ItemType Directory -Path $logsDir | Out-Null
 }
+
+# Clear log file at startup
+$logFile = Join-Path $logsDir "GitLoop.log"
+if (Test-Path $logFile) {
+    Clear-Content $logFile
+}
+Set-Content -Path $logFile -Value "# Git Loop Log File`n# New session started: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
 
 # Initialize error logging
 $errorLogPath = Join-Path $logsDir "errors.log"
@@ -1395,9 +1406,6 @@ if ($PSBoundParameters['Test']) {
 if (-not (Test-Dependencies)) {
     exit 1
 }
-
-# Initialize log buffer
-$script:logBuffer = New-Object System.Collections.ArrayList
 
 # Show form
 $form.ShowDialog()
