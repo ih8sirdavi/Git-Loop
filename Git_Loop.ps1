@@ -10,9 +10,14 @@ $script:StartTime = Get-Date
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
-# Script-level variables for logging
+# Script-level variables
 $script:LogFile = $null
 $script:ErrorLogFile = $null
+$script:runningJobs = @{}
+$script:LastRepoOperation = @{}
+$script:MonitoredRepositories = @{}
+$script:RepoOperationLock = [System.Collections.Concurrent.ConcurrentDictionary[string, bool]]::new()
+$script:MinOperationInterval = 500 # Milliseconds
 
 function Write-Log {
     param(
