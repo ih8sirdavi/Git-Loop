@@ -257,12 +257,15 @@ The `.gitignore` is configured to maintain a clean repository while developing:
     * Properly handle CRLF/LF warnings
     * Better distinction between warnings and errors
     * Cleaner log output
+    * Smarter warning detection
+    * Enhanced sync reliability
 
   - **Error Handling**
     * Smarter error detection
     * Reduced false positive errors
     * More accurate sync status reporting
     * Enhanced warning filtering
+    * Improved log clarity
 
 - **v1.1.0**
   - **Job Management**
