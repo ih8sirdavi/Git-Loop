@@ -362,12 +362,12 @@ $errorLogPath = Join-Path $logsDir "errors.log"
 if (Test-Path $logFile) {
     Clear-Content $logFile
 }
-Set-Content -Path $logFile -Value "# Git Loop Log File`n# New session started: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+Set-Content -Path $logFile -Value "# Git Loop Log File`n# This file contains logs for the current active session only"
 
 # Clear error log file if it exists
 if (Test-Path $errorLogPath) {
     Clear-Content $errorLogPath
-    Set-Content -Path $errorLogPath -Value "# Git Loop Error Log`n# New session started: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+    Set-Content -Path $errorLogPath -Value "# Git Loop Error Log`n# This file contains errors for the current active session only"
 }
 
 # Function to update existing config with new settings
@@ -1265,13 +1265,13 @@ $stopButton.Add_Click({
     Log-Message "Stopped monitoring repositories"
     
     # Write buffered logs to file
-    Set-Content -Path $config.LogFile -Value "# Git Loop Log File`n# Session ended: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+    Set-Content -Path $config.LogFile -Value "# Git Loop Log File`n# This file contains logs for the current active session only"
     Add-Content -Path $config.LogFile -Value $script:logBuffer
     
     # Write error logs if any
     if ($script:errorBuffer.Count -gt 0) {
         $errorLogPath = Join-Path $logsDir "errors.log"
-        Set-Content -Path $errorLogPath -Value "# Git Loop Error Log`n# Session ended: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+        Set-Content -Path $errorLogPath -Value "# Git Loop Error Log`n# This file contains errors for the current active session only"
         Add-Content -Path $errorLogPath -Value $script:errorBuffer
     }
     
@@ -1311,13 +1311,13 @@ $form.Add_FormClosing({
     
     # Write buffered logs to file
     $logFile = Join-Path $logsDir $config.LogFile
-    Set-Content -Path $logFile -Value "# Git Loop Log File`n# Session ended: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+    Set-Content -Path $logFile -Value "# Git Loop Log File`n# This file contains logs for the current active session only"
     Add-Content -Path $logFile -Value $script:logBuffer
     
     # Write error logs if any
     if ($script:errorBuffer.Count -gt 0) {
         $errorLogPath = Join-Path $logsDir "errors.log"
-        Set-Content -Path $errorLogPath -Value "# Git Loop Error Log`n# Session ended: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+        Set-Content -Path $errorLogPath -Value "# Git Loop Error Log`n# This file contains errors for the current active session only"
         Add-Content -Path $errorLogPath -Value $script:errorBuffer
     }
     
