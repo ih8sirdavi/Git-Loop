@@ -1400,221 +1400,168 @@ $script:LastRepoOperation = @{}
 $script:RepoOperationLock = [System.Collections.Concurrent.ConcurrentDictionary[string, bool]]::new()
 $script:MinOperationInterval = 500 # Milliseconds
 
-function Initialize-Configuration {
+function Start-RepositoryOperation {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$RepoPath
+    )
+    
     try {
-        $configPath = Join-Path $PSScriptRoot "config.json"
-        $configExamplePath = Join-Path $PSScriptRoot "config.example"
+        $repoName = Split-Path $RepoPath -Leaf
         
-        # Create config from example if it doesn't exist
-        if (-not (Test-Path $configPath) -and (Test-Path $configExamplePath)) {
-            Copy-Item $configExamplePath $configPath
-            Write-Log -Message "Created new config file from example" -Level "INFO"
+        # Get count of currently running operations
+        $runningOps = Get-Job | Where-Object { 
+            $_.Name -like "GitLoop_*" -and $_.State -eq 'Running' 
+        } | Measure-Object
+        
+        # Add staggered delay based on running operations
+        if ($runningOps.Count -gt 0) {
+            $staggerDelay = 250 * $runningOps.Count # 250ms delay per running operation
+            Write-Log -Message "Staggering operation for $repoName by ${staggerDelay}ms" -Level "INFO"
+            Start-Sleep -Milliseconds $staggerDelay
         }
         
-        if (Test-Path $configPath) {
-            $config = Get-Content $configPath -Raw | ConvertFrom-Json
+        # Start the operation
+        $job = Start-Job -Name "GitLoop_$repoName" -ScriptBlock {
+            # ... existing job code ...
+        }
+        
+        Write-Log -Message "Started async operation: $repoName" -Level "INFO"
+        return $job
+    }
+    catch {
+        Write-Log -Message "Error starting operation for $repoName`: $_" -Level "ERROR"
+        return $null
+    }
+}
+
+function Start-GitOperation {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$RepoPath
+    )
+    
+    try {
+        $repoName = Split-Path $RepoPath -Leaf
+        $startTime = Get-Date
+        Write-Log -Message "Starting Git operation for $repoName" -Level "INFO"
+        
+        Push-Location $RepoPath
+        try {
+            # Check for changes
+            $status = git status --porcelain
+            if ($status) {
+                Write-Log -Message "Found local changes in $repoName" -Level "INFO"
+                $changeCount = ($status | Measure-Object -Line).Lines
+                Write-Log -Message "$changeCount change(s) detected in $repoName" -Level "INFO"
+            }
             
-            # Update config with any missing properties from example
-            if (Test-Path $configExamplePath) {
-                $example = Get-Content $configExamplePath -Raw | ConvertFrom-Json
-                $updated = Update-ConfigurationFromExample $config $example
-                if ($updated) {
-                    $config | ConvertTo-Json -Depth 10 | Set-Content $configPath
-                    Write-Log -Message "Updated config file with new settings" -Level "INFO"
+            # Check for remote changes
+            Write-Log -Message "Checking remote status for $repoName" -Level "INFO"
+            $beforeFetch = git rev-parse HEAD
+            git fetch
+            $afterFetch = git rev-parse '@{u}'
+            
+            if ($beforeFetch -ne $afterFetch) {
+                Write-Log -Message "Remote changes detected in $repoName" -Level "INFO"
+            }
+            
+            # Perform sync
+            if ($status -or ($beforeFetch -ne $afterFetch)) {
+                Write-Log -Message "Syncing changes for $repoName" -Level "INFO"
+                $pullResult = git pull
+                if ($LASTEXITCODE -eq 0) {
+                    Write-Log -Message "Pull successful for $repoName" -Level "INFO"
+                } else {
+                    Write-Log -Message ("Pull failed for {0}: {1}" -f $repoName, $pullResult) -Level "ERROR"
                 }
-            }
-            
-            $script:Config = $config
-            
-            # Initialize features based on config
-            if ($config.ResourceMonitoring.Enabled) {
-                Initialize-ResourceMonitoring
-            }
-            
-            # Set operation intervals
-            $script:MinOperationInterval = [math]::Max(100, $config.MinOperationInterval)
-            
-            Write-Log -Message "Configuration initialized successfully" -Level "INFO"
-        } else {
-            throw "No config file found and couldn't create from example"
-        }
-    }
-    catch {
-        Write-Log -Message "Error initializing configuration: $_" -Level "ERROR"
-        throw
-    }
-}
-
-function Update-ConfigurationFromExample {
-    param($Current, $Example)
-    
-    $updated = $false
-    $Example.PSObject.Properties | ForEach-Object {
-        $name = $_.Name
-        if (-not $Current.PSObject.Properties[$name]) {
-            Add-Member -InputObject $Current -MemberType NoteProperty -Name $name -Value $_.Value
-            $updated = $true
-        }
-        elseif ($_.Value -is [PSCustomObject] -and $Current.$name -is [PSCustomObject]) {
-            $subUpdated = Update-ConfigurationFromExample $Current.$name $_.Value
-            $updated = $updated -or $subUpdated
-        }
-    }
-    return $updated
-}
-
-function Initialize-ResourceMonitoring {
-    $script:ResourceMonitor = [PSCustomObject]@{
-        LastCheck = Get-Date
-        CpuUsage = 0
-        MemoryUsage = 0
-        NetworkLatency = 0
-    }
-    
-    $monitorTimer = New-Object System.Windows.Forms.Timer
-    $monitorTimer.Interval = $script:Config.ResourceMonitoring.CheckIntervalSeconds * 1000
-    $monitorTimer.Add_Tick({
-        Update-ResourceMetrics
-    })
-    $monitorTimer.Start()
-}
-
-function Update-ResourceMetrics {
-    try {
-        # Get CPU usage
-        $cpu = Get-Counter '\Processor(_Total)\% Processor Time' -ErrorAction SilentlyContinue
-        if ($cpu) {
-            $script:ResourceMonitor.CpuUsage = [math]::Round($cpu.CounterSamples[0].CookedValue)
-        }
-        
-        # Get memory usage
-        $memory = Get-Counter '\Memory\% Committed Bytes In Use' -ErrorAction SilentlyContinue
-        if ($memory) {
-            $script:ResourceMonitor.MemoryUsage = [math]::Round($memory.CounterSamples[0].CookedValue)
-        }
-        
-        # Check if we need to throttle based on resource usage
-        if ($script:Config.ResourceMonitoring.Enabled) {
-            if ($script:ResourceMonitor.CpuUsage -gt $script:Config.ResourceMonitoring.MaxCpuPercent -or
-                $script:ResourceMonitor.MemoryUsage -gt $script:Config.ResourceMonitoring.MaxMemoryPercent) {
-                Write-Log -Message "Resource usage high (CPU: $($script:ResourceMonitor.CpuUsage)%, Memory: $($script:ResourceMonitor.MemoryUsage)%) - throttling operations" -Level "WARN"
-                $script:MinOperationInterval = [math]::Min(2000, $script:MinOperationInterval * 2)
+                
+                if ($status) {
+                    $pushResult = git push
+                    if ($LASTEXITCODE -eq 0) {
+                        Write-Log -Message "Push successful for $repoName" -Level "INFO"
+                    } else {
+                        Write-Log -Message ("Push failed for {0}: {1}" -f $repoName, $pushResult) -Level "ERROR"
+                    }
+                }
             } else {
-                $script:MinOperationInterval = $script:Config.MinOperationInterval
+                Write-Log -Message "No changes to sync for $repoName" -Level "INFO"
             }
+            
+            $duration = ((Get-Date) - $startTime).TotalMilliseconds
+            Write-Log -Message "Operation completed for $repoName (duration: ${duration}ms)" -Level "INFO"
+            return $true
         }
-        
-        if ($script:Config.Logging.ResourceUsage) {
-            Write-Log -Message "Resource Usage - CPU: $($script:ResourceMonitor.CpuUsage)%, Memory: $($script:ResourceMonitor.MemoryUsage)%" -Level "DEBUG"
+        finally {
+            Pop-Location
         }
     }
     catch {
-        Write-Log -Message "Error updating resource metrics: $_" -Level "ERROR"
+        $duration = ((Get-Date) - $startTime).TotalMilliseconds
+        Write-Log -Message ("Operation failed for {0} after {1}ms: {2}" -f $repoName, $duration, $_.Exception.Message) -Level "ERROR"
+        return $false
     }
 }
 
 function Start-RepositoryJob {
     param(
-        [string]$RepoPath,
-        [string]$Operation
+        [Parameter(Mandatory = $true)]
+        [string]$RepoPath
     )
     
     try {
-        if ($script:Config.NetworkChecks.Enabled) {
-            $networkOk = Test-NetworkConnectivity
-            if (-not $networkOk) {
-                Write-Log -Message "Network check failed - delaying operation" -Level "WARN"
-                return $false
-            }
-        }
-        
-        if ($script:Config.ParallelOperations.Enabled) {
-            $runningJobs = Get-Job | Where-Object { $_.State -eq 'Running' }
-            if ($runningJobs.Count -ge $script:Config.ParallelOperations.MaxParallelJobs) {
-                Write-Log -Message "Maximum parallel jobs reached - waiting" -Level "WARN"
-                return $false
-            }
-        }
-        
-        # Start operation with performance tracking
+        $repoName = Split-Path $RepoPath -Leaf
         $startTime = Get-Date
-        $result = & $Operation
         
-        if ($script:Config.Logging.PerformanceMetrics) {
-            $duration = ((Get-Date) - $startTime).TotalMilliseconds
-            $repoName = Split-Path $RepoPath -Leaf
-            if (-not $script:PerformanceMetrics[$repoName]) {
-                $script:PerformanceMetrics[$repoName] = @{
-                    Operations = 0
-                    TotalDuration = 0
-                    MaxDuration = 0
-                    MinDuration = [double]::MaxValue
+        # Get count of currently running operations
+        $runningOps = Get-Job | Where-Object { 
+            $_.Name -like "GitLoop_*" -and $_.State -eq 'Running' 
+        } | Measure-Object
+        
+        # Add staggered delay based on running operations
+        if ($runningOps.Count -gt 0) {
+            $staggerDelay = 250 * $runningOps.Count
+            Write-Log -Message "Staggering operation for $repoName by ${staggerDelay}ms" -Level "INFO"
+            Start-Sleep -Milliseconds $staggerDelay
+        }
+        
+        Write-Log -Message "Starting async operation: $repoName" -Level "INFO"
+        
+        # Start the operation as a job
+        $job = Start-Job -Name "GitLoop_$repoName" -ScriptBlock {
+            param($RepoPath, $StartTime)
+            . $using:PSScriptRoot\Git_Loop.ps1
+            Start-GitOperation -RepoPath $RepoPath
+        } -ArgumentList $RepoPath, $startTime
+        
+        # Register event for job completion
+        Register-ObjectEvent -InputObject $job -EventName StateChanged -Action {
+            $job = $Event.Sender
+            $repoName = $job.Name -replace '^GitLoop_'
+            $duration = ((Get-Date) - $job.PSBeginTime).TotalMilliseconds
+            
+            if ($job.State -eq 'Completed') {
+                $result = Receive-Job -Job $job
+                if ($result) {
+                    Write-Log -Message "Async operation completed successfully for $repoName (duration: ${duration}ms)" -Level "INFO"
+                } else {
+                    Write-Log -Message "Async operation completed with errors for $repoName (duration: ${duration}ms)" -Level "WARN"
                 }
             }
-            $metrics = $script:PerformanceMetrics[$repoName]
-            $metrics.Operations++
-            $metrics.TotalDuration += $duration
-            $metrics.MaxDuration = [math]::Max($metrics.MaxDuration, $duration)
-            $metrics.MinDuration = [math]::Min($metrics.MinDuration, $duration)
+            elseif ($job.State -eq 'Failed') {
+                $error = Receive-Job -Job $job -ErrorAction SilentlyContinue
+                Write-Log -Message ("Async operation failed for {0} after {1}ms: {2}" -f $repoName, $duration, $error) -Level "ERROR"
+            }
             
-            Write-Log -Message "Operation completed in ${duration}ms (Avg: $([math]::Round($metrics.TotalDuration / $metrics.Operations))ms)" -Level "DEBUG"
-        }
+            # Cleanup
+            Unregister-Event -SourceIdentifier $Event.SourceIdentifier
+            Remove-Job -Job $job
+        } | Out-Null
         
-        return $result
+        return $job
     }
     catch {
-        Write-Log -Message "Error in repository operation: $_" -Level "ERROR"
-        return $false
-    }
-}
-
-function Test-NetworkConnectivity {
-    $retryCount = 0
-    while ($retryCount -lt $script:Config.NetworkChecks.RetryAttempts) {
-        try {
-            $result = Test-Connection -ComputerName "github.com" -Count 1 -Quiet -TimeoutSeconds $script:Config.NetworkChecks.TimeoutSeconds
-            if ($result) {
-                return $true
-            }
-        }
-        catch {
-            Write-Log -Message "Network check attempt $($retryCount + 1) failed: $_" -Level "WARN"
-        }
-        $retryCount++
-        Start-Sleep -Seconds 1
-    }
-    return $false
-}
-
-# Update the existing Retry-Operation function
-function Retry-Operation {
-    param(
-        [scriptblock]$Operation,
-        [string]$OperationName,
-        [string]$Repository
-    )
-    
-    $retryCount = 0
-    $delay = $script:MinOperationInterval / 1000.0  # Convert to seconds
-    
-    while ($retryCount -lt $script:Config.MaxRetries) {
-        try {
-            return & $Operation
-        }
-        catch {
-            $retryCount++
-            if ($retryCount -eq $script:Config.MaxRetries) {
-                throw
-            }
-            
-            # Calculate exponential backoff
-            $delay = [math]::Min(
-                $script:Config.MaxRetryDelaySeconds,
-                $delay * $script:Config.RetryBackoffMultiplier
-            )
-            
-            Write-Log -Message "Retry $retryCount/$($script:Config.MaxRetries) for $OperationName on $Repository - waiting ${delay}s" -Level "WARN"
-            Start-Sleep -Seconds $delay
-        }
+        Write-Log -Message ("Failed to start job for {0}: {1}" -f $repoName, $_.Exception.Message) -Level "ERROR"
+        return $null
     }
 }

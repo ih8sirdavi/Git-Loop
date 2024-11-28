@@ -1,5 +1,4 @@
 # Git Loop Core
-/logs/
 /config
 !/config.example
 
@@ -28,6 +27,12 @@ NOTES.md
 *.psm1.old
 *.psd1.old
 
+# PowerShell Studio project files
+*.psproj
+*.psproj.bak
+*.psprojs
+*.psproj.user
+
 # IDE and editor files
 .vscode/
 .idea/
@@ -47,14 +52,9 @@ NOTES.md
 *.cache
 
 # Windows specific
-Thumbs.db
 ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
-
-# Log files (but keep the logs directory structure)
-*.log
-!logs/.gitkeep
 
 # Test files
 /tests/
@@ -67,8 +67,50 @@ $RECYCLE.BIN/
 *.[Ww]ip.*
 /docs/drafts/
 
+# Windows image file caches
+Thumbs.db
+
+# Windows Installer files
+*.cab
+*.msi
+*.msm
+*.msp
+
+# Windows shortcuts
+*.lnk
+
+# =========================
+# Operating System Files
+# =========================
+
+# OSX
+# =========================
+
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Thumbnails
+._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
 # Keep these files
 !README.md
 !LICENSE
 !CHANGELOG.md
 !CONTRIBUTING.md
+!logs/.gitkeep
