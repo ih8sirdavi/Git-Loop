@@ -1400,236 +1400,221 @@ $script:LastRepoOperation = @{}
 $script:RepoOperationLock = [System.Collections.Concurrent.ConcurrentDictionary[string, bool]]::new()
 $script:MinOperationInterval = 500 # Milliseconds
 
-function Test-ValidGitRepository {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$Path
-    )
-    
+function Initialize-Configuration {
     try {
-        # Check if path is null or empty
-        if ([string]::IsNullOrWhiteSpace($Path)) {
-            Write-Log -Message "Invalid repository path: Path is null or empty" -Level "ERROR"
-            return $false
-        }
-
-        # Check if path exists
-        if (-not (Test-Path -Path $Path)) {
-            Write-Log -Message "Invalid repository path: $Path does not exist" -Level "ERROR"
-            return $false
-        }
-
-        # Check if it's a directory
-        if (-not (Test-Path -Path $Path -PathType Container)) {
-            Write-Log -Message "Invalid repository path: $Path is not a directory" -Level "ERROR"
-            return $false
-        }
-
-        # Check if it's a git repository
-        Push-Location $Path
-        try {
-            $gitTest = git rev-parse --git-dir 2>&1
-            if ($LASTEXITCODE -ne 0) {
-                Write-Log -Message "Invalid repository path: $Path is not a git repository" -Level "ERROR"
-                return $false
-            }
-        }
-        finally {
-            Pop-Location
-        }
-
-        return $true
-    }
-    catch {
-        Write-Log -Message "Error validating repository path $Path`: $_" -Level "ERROR"
-        return $false
-    }
-}
-
-function Add-RepositoryToSync {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$RepoPath
-    )
-    
-    try {
-        # Validate repository path first
-        if (-not (Test-ValidGitRepository -Path $RepoPath)) {
-            return $false
-        }
-
-        $repoName = Split-Path $RepoPath -Leaf
+        $configPath = Join-Path $PSScriptRoot "config.json"
+        $configExamplePath = Join-Path $PSScriptRoot "config.example"
         
-        # Check if we're operating too quickly on this repo
-        $lastOp = $script:LastRepoOperation[$repoName]
-        $now = Get-Date
-        if ($lastOp -and ($now - $lastOp).TotalMilliseconds -lt $script:MinOperationInterval) {
-            Write-Log -Message "Operation on repository $repoName throttled - please wait" -Level "WARN"
-            return $false
+        # Create config from example if it doesn't exist
+        if (-not (Test-Path $configPath) -and (Test-Path $configExamplePath)) {
+            Copy-Item $configExamplePath $configPath
+            Write-Log -Message "Created new config file from example" -Level "INFO"
         }
         
-        # Try to acquire lock for this repo
-        if (-not $script:RepoOperationLock.TryAdd($repoName, $true)) {
-            Write-Log -Message "Repository $repoName is currently being processed" -Level "WARN"
-            return $false
-        }
-        
-        try {
-            # Verify repository is not already being monitored
-            if ($script:MonitoredRepositories.ContainsKey($RepoPath)) {
-                Write-Log -Message "Repository $repoName is already being monitored" -Level "WARN"
-                return $false
-            }
+        if (Test-Path $configPath) {
+            $config = Get-Content $configPath -Raw | ConvertFrom-Json
             
-            # Add to monitored repositories
-            $script:MonitoredRepositories[$RepoPath] = @{
-                LastSync = $null
-                Status = "Pending"
-                Branch = ""
-                CurrentOperation = $null
-            }
-            
-            Write-Log -Message "Repository $repoName added to sync list" -Level "INFO"
-            $script:LastRepoOperation[$repoName] = $now
-            return $true
-        }
-        finally {
-            # Release lock
-            $null = $script:RepoOperationLock.TryRemove($repoName, [ref]$true)
-        }
-    }
-    catch {
-        Write-Log -Message "Error adding repository $repoName`: $_" -Level "ERROR"
-        return $false
-    }
-}
-
-function Remove-RepositoryFromSync {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$RepoPath
-    )
-    
-    try {
-        $repoName = Split-Path $RepoPath -Leaf
-        
-        # Check if we're operating too quickly on this repo
-        $lastOp = $script:LastRepoOperation[$repoName]
-        $now = Get-Date
-        if ($lastOp -and ($now - $lastOp).TotalMilliseconds -lt $script:MinOperationInterval) {
-            Write-Log -Message "Operation on repository $repoName throttled - please wait" -Level "WARN"
-            return $false
-        }
-        
-        # Try to acquire lock for this repo
-        if (-not $script:RepoOperationLock.TryAdd($repoName, $true)) {
-            Write-Log -Message "Repository $repoName is currently being processed" -Level "WARN"
-            return $false
-        }
-        
-        try {
-            # Clean up any running jobs for this repo
-            Get-Job | Where-Object { 
-                $_.Name -like "GitLoop_$repoName*" 
-            } | Stop-Job -PassThru | Remove-Job
-            
-            # Remove from monitored repositories
-            $script:MonitoredRepositories.Remove($RepoPath)
-            
-            Write-Log -Message "Repository $repoName removed from sync list" -Level "INFO"
-            $script:LastRepoOperation[$repoName] = $now
-            return $true
-        }
-        finally {
-            # Release lock
-            $null = $script:RepoOperationLock.TryRemove($repoName, [ref]$true)
-        }
-    }
-    catch {
-        Write-Log -Message "Error removing repository $repoName`: $_" -Level "ERROR"
-        return $false
-    }
-}
-
-# Update the form cleanup to include new resources
-$form.Add_FormClosing({
-    param($sender, $e)
-    Write-Host "Cleaning up resources..."
-    
-    # Stop monitoring
-    Stop-MonitoringRepositories
-    
-    # Stop all timers
-    if ($script:CountdownTimer) {
-        $script:CountdownTimer.Stop()
-        $script:CountdownTimer.Dispose()
-    }
-    if ($script:JobMonitorTimer) {
-        $script:JobMonitorTimer.Stop()
-        $script:JobMonitorTimer.Dispose()
-    }
-    
-    # Clean up any running jobs
-    Get-Job | Where-Object { $_.Name -like "GitLoop*" } | Stop-Job -PassThru | Remove-Job
-    
-    # Kill any remaining git processes started by this script
-    Get-Process | Where-Object { $_.Name -eq "git" -and $_.StartTime -gt $script:StartTime } | Stop-Process -Force
-    
-    # Clear operation tracking
-    $script:LastRepoOperation.Clear()
-    $script:RepoOperationLock.Clear()
-    
-    Write-Host "Cleanup complete"
-    Write-Log -Message "Application exiting - cleanup complete" -Level "INFO"
-})
-
-function Initialize-Logging {
-    param(
-        [int]$MaxLogSizeMB = 10,
-        [int]$MaxLogFiles = 5
-    )
-    
-    try {
-        # Ensure logs directory exists
-        $logsPath = Join-Path $PSScriptRoot "logs"
-        if (-not (Test-Path $logsPath)) {
-            New-Item -ItemType Directory -Path $logsPath | Out-Null
-        }
-
-        # Define log files
-        $script:LogFile = Join-Path $logsPath "GitLoop.log"
-        $script:ErrorLogFile = Join-Path $logsPath "errors.log"
-
-        # Rotate logs if they exceed size limit
-        $logFiles = @($script:LogFile, $script:ErrorLogFile)
-        foreach ($file in $logFiles) {
-            if (Test-Path $file) {
-                $logSize = (Get-Item $file).Length / 1MB
-                if ($logSize -gt $MaxLogSizeMB) {
-                    # Rotate existing backup logs
-                    for ($i = $MaxLogFiles - 1; $i -gt 0; $i--) {
-                        $oldFile = "$file.$i"
-                        $newFile = "$file.$($i + 1)"
-                        if (Test-Path $oldFile) {
-                            Move-Item -Path $oldFile -Destination $newFile -Force -ErrorAction SilentlyContinue
-                        }
-                    }
-                    # Move current log to .1
-                    Move-Item -Path $file -Destination "$file.1" -Force
-                    # Create new empty log file
-                    New-Item -ItemType File -Path $file -Force | Out-Null
+            # Update config with any missing properties from example
+            if (Test-Path $configExamplePath) {
+                $example = Get-Content $configExamplePath -Raw | ConvertFrom-Json
+                $updated = Update-ConfigurationFromExample $config $example
+                if ($updated) {
+                    $config | ConvertTo-Json -Depth 10 | Set-Content $configPath
+                    Write-Log -Message "Updated config file with new settings" -Level "INFO"
                 }
             }
+            
+            $script:Config = $config
+            
+            # Initialize features based on config
+            if ($config.ResourceMonitoring.Enabled) {
+                Initialize-ResourceMonitoring
+            }
+            
+            # Set operation intervals
+            $script:MinOperationInterval = [math]::Max(100, $config.MinOperationInterval)
+            
+            Write-Log -Message "Configuration initialized successfully" -Level "INFO"
+        } else {
+            throw "No config file found and couldn't create from example"
         }
-
-        # Clean up old log files
-        Get-ChildItem -Path $logsPath -Filter "*.log.*" | Where-Object {
-            $_.Name -match "\.(\d+)$" -and [int]$matches[1] -gt $MaxLogFiles
-        } | Remove-Item -Force
-
-        Write-Log -Message "Logging initialized with max size ${MaxLogSizeMB}MB and $MaxLogFiles rotation files" -Level "INFO"
     }
     catch {
-        Write-Error "Failed to initialize logging: $_"
+        Write-Log -Message "Error initializing configuration: $_" -Level "ERROR"
+        throw
+    }
+}
+
+function Update-ConfigurationFromExample {
+    param($Current, $Example)
+    
+    $updated = $false
+    $Example.PSObject.Properties | ForEach-Object {
+        $name = $_.Name
+        if (-not $Current.PSObject.Properties[$name]) {
+            Add-Member -InputObject $Current -MemberType NoteProperty -Name $name -Value $_.Value
+            $updated = $true
+        }
+        elseif ($_.Value -is [PSCustomObject] -and $Current.$name -is [PSCustomObject]) {
+            $subUpdated = Update-ConfigurationFromExample $Current.$name $_.Value
+            $updated = $updated -or $subUpdated
+        }
+    }
+    return $updated
+}
+
+function Initialize-ResourceMonitoring {
+    $script:ResourceMonitor = [PSCustomObject]@{
+        LastCheck = Get-Date
+        CpuUsage = 0
+        MemoryUsage = 0
+        NetworkLatency = 0
+    }
+    
+    $monitorTimer = New-Object System.Windows.Forms.Timer
+    $monitorTimer.Interval = $script:Config.ResourceMonitoring.CheckIntervalSeconds * 1000
+    $monitorTimer.Add_Tick({
+        Update-ResourceMetrics
+    })
+    $monitorTimer.Start()
+}
+
+function Update-ResourceMetrics {
+    try {
+        # Get CPU usage
+        $cpu = Get-Counter '\Processor(_Total)\% Processor Time' -ErrorAction SilentlyContinue
+        if ($cpu) {
+            $script:ResourceMonitor.CpuUsage = [math]::Round($cpu.CounterSamples[0].CookedValue)
+        }
+        
+        # Get memory usage
+        $memory = Get-Counter '\Memory\% Committed Bytes In Use' -ErrorAction SilentlyContinue
+        if ($memory) {
+            $script:ResourceMonitor.MemoryUsage = [math]::Round($memory.CounterSamples[0].CookedValue)
+        }
+        
+        # Check if we need to throttle based on resource usage
+        if ($script:Config.ResourceMonitoring.Enabled) {
+            if ($script:ResourceMonitor.CpuUsage -gt $script:Config.ResourceMonitoring.MaxCpuPercent -or
+                $script:ResourceMonitor.MemoryUsage -gt $script:Config.ResourceMonitoring.MaxMemoryPercent) {
+                Write-Log -Message "Resource usage high (CPU: $($script:ResourceMonitor.CpuUsage)%, Memory: $($script:ResourceMonitor.MemoryUsage)%) - throttling operations" -Level "WARN"
+                $script:MinOperationInterval = [math]::Min(2000, $script:MinOperationInterval * 2)
+            } else {
+                $script:MinOperationInterval = $script:Config.MinOperationInterval
+            }
+        }
+        
+        if ($script:Config.Logging.ResourceUsage) {
+            Write-Log -Message "Resource Usage - CPU: $($script:ResourceMonitor.CpuUsage)%, Memory: $($script:ResourceMonitor.MemoryUsage)%" -Level "DEBUG"
+        }
+    }
+    catch {
+        Write-Log -Message "Error updating resource metrics: $_" -Level "ERROR"
+    }
+}
+
+function Start-RepositoryJob {
+    param(
+        [string]$RepoPath,
+        [string]$Operation
+    )
+    
+    try {
+        if ($script:Config.NetworkChecks.Enabled) {
+            $networkOk = Test-NetworkConnectivity
+            if (-not $networkOk) {
+                Write-Log -Message "Network check failed - delaying operation" -Level "WARN"
+                return $false
+            }
+        }
+        
+        if ($script:Config.ParallelOperations.Enabled) {
+            $runningJobs = Get-Job | Where-Object { $_.State -eq 'Running' }
+            if ($runningJobs.Count -ge $script:Config.ParallelOperations.MaxParallelJobs) {
+                Write-Log -Message "Maximum parallel jobs reached - waiting" -Level "WARN"
+                return $false
+            }
+        }
+        
+        # Start operation with performance tracking
+        $startTime = Get-Date
+        $result = & $Operation
+        
+        if ($script:Config.Logging.PerformanceMetrics) {
+            $duration = ((Get-Date) - $startTime).TotalMilliseconds
+            $repoName = Split-Path $RepoPath -Leaf
+            if (-not $script:PerformanceMetrics[$repoName]) {
+                $script:PerformanceMetrics[$repoName] = @{
+                    Operations = 0
+                    TotalDuration = 0
+                    MaxDuration = 0
+                    MinDuration = [double]::MaxValue
+                }
+            }
+            $metrics = $script:PerformanceMetrics[$repoName]
+            $metrics.Operations++
+            $metrics.TotalDuration += $duration
+            $metrics.MaxDuration = [math]::Max($metrics.MaxDuration, $duration)
+            $metrics.MinDuration = [math]::Min($metrics.MinDuration, $duration)
+            
+            Write-Log -Message "Operation completed in ${duration}ms (Avg: $([math]::Round($metrics.TotalDuration / $metrics.Operations))ms)" -Level "DEBUG"
+        }
+        
+        return $result
+    }
+    catch {
+        Write-Log -Message "Error in repository operation: $_" -Level "ERROR"
+        return $false
+    }
+}
+
+function Test-NetworkConnectivity {
+    $retryCount = 0
+    while ($retryCount -lt $script:Config.NetworkChecks.RetryAttempts) {
+        try {
+            $result = Test-Connection -ComputerName "github.com" -Count 1 -Quiet -TimeoutSeconds $script:Config.NetworkChecks.TimeoutSeconds
+            if ($result) {
+                return $true
+            }
+        }
+        catch {
+            Write-Log -Message "Network check attempt $($retryCount + 1) failed: $_" -Level "WARN"
+        }
+        $retryCount++
+        Start-Sleep -Seconds 1
+    }
+    return $false
+}
+
+# Update the existing Retry-Operation function
+function Retry-Operation {
+    param(
+        [scriptblock]$Operation,
+        [string]$OperationName,
+        [string]$Repository
+    )
+    
+    $retryCount = 0
+    $delay = $script:MinOperationInterval / 1000.0  # Convert to seconds
+    
+    while ($retryCount -lt $script:Config.MaxRetries) {
+        try {
+            return & $Operation
+        }
+        catch {
+            $retryCount++
+            if ($retryCount -eq $script:Config.MaxRetries) {
+                throw
+            }
+            
+            # Calculate exponential backoff
+            $delay = [math]::Min(
+                $script:Config.MaxRetryDelaySeconds,
+                $delay * $script:Config.RetryBackoffMultiplier
+            )
+            
+            Write-Log -Message "Retry $retryCount/$($script:Config.MaxRetries) for $OperationName on $Repository - waiting ${delay}s" -Level "WARN"
+            Start-Sleep -Seconds $delay
+        }
     }
 }

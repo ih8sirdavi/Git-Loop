@@ -8,13 +8,39 @@
             "AutoSync": true
         }
     ],
-    "SyncInterval": 30,
-    "MaxRetries": 3,
     "JobTimeoutSeconds": 300,
-    "LogRetention": 100,
-    "LogFile": "GitLoop.log",
-    "MaxLogSize": "5MB",
-    "Theme": "Light",
+    "MaxRetries": 3,
+    "SyncInterval": 30,
+    "LogRetention": 5,
+    "MaxLogSizeMB": 10,
+    "MinOperationInterval": 250,
+    "RetryBackoffMultiplier": 2,
+    "MaxRetryDelaySeconds": 30,
+    "ResourceMonitoring": {
+        "Enabled": true,
+        "MaxCpuPercent": 80,
+        "MaxMemoryPercent": 75,
+        "CheckIntervalSeconds": 5
+    },
+    "ParallelOperations": {
+        "Enabled": true,
+        "MaxParallelJobs": 3
+    },
+    "NetworkChecks": {
+        "Enabled": true,
+        "TimeoutSeconds": 10,
+        "RetryAttempts": 3
+    },
+    "AutoStash": {
+        "Enabled": true,
+        "StashTimeout": 300
+    },
+    "Logging": {
+        "PerformanceMetrics": true,
+        "OperationTiming": true,
+        "ResourceUsage": true,
+        "DetailLevel": "Verbose"
+    },
     "UI": {
         "Themes": {
             "Light": {
@@ -39,6 +65,10 @@
                 "Error": "#DC3545",
                 "Warning": "#FFC107"
             }
-        }
+        },
+        "ShowProgress": true,
+        "ShowEstimates": true,
+        "ShowResourceUsage": true,
+        "RefreshIntervalMs": 500
     }
 }
